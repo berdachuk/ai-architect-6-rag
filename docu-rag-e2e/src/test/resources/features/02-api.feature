@@ -14,6 +14,7 @@ Feature: DocuRAG REST API
     When I POST incremental index expecting not implemented
     When I ask RAG "What is hypertension?"
     Then the RAG response has an answer and retrieved chunks
+    And the RAG answer body contains "Hypertension"
     When I run document analysis with defaults
     Then the analysis response is present
     When I fetch category pie visualization

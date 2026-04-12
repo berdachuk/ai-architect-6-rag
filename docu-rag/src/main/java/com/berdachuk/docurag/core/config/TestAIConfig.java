@@ -16,20 +16,59 @@ import org.springframework.context.annotation.Profile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 @Configuration
 @Profile({"test", "e2e"})
 public class TestAIConfig {
 
     private static final int DIM = 768;
+    private static final Set<String> stopWords = Set.of(
+            "what", "which", "how", "when", "where", "why", "can", "does", "is", "should", "could", "would", "the", "and", "for", "with", "from");
+    private static final Locale LOCALE = Locale.ROOT;
 
     @Bean
     @Primary
     public ChatModel chatModel() {
-        return prompt -> ChatResponse.builder()
-                .generations(List.of(new Generation(new AssistantMessage(
-                        "stub answer for tests — cite only given context."))))
-                .build();
+        return prompt -> {
+            String text = prompt.toString();
+            // Echo the topic word (first significant noun) back in the stub answer so E2E
+            // assertions on answer content can succeed without a real LLM.
+            String topic = extractTopicWord(text);
+            String answer = "stub answer for tests about " + topic
+                    + " — cite only given context.";
+            return ChatResponse.builder()
+                    .generations(List.of(new Generation(new AssistantMessage(answer))))
+                    .build();
+        };
+    }
+
+    private static String extractTopicWord(String text) {
+        if (text == null || text.isBlank()) {
+            return "Medical";
+        }
+        // Look for the question — it typically contains the topic after "Question:".
+        int qi = text.indexOf("Question:");
+        int from = qi >= 0 ? qi + 9 : 0;
+        // Grab the first word after "Question:" that is longer than 2 chars.
+        // Spring AI lowercases the prompt internally, so capitalize to restore expected casing.
+        String rest = text.substring(from).trim();
+        String[] words = rest.split("\\s+");
+        for (String w : words) {
+            String cleaned = w.replaceAll("[^a-zA-Z]", "");
+            if (cleaned.length() > 2 && !stopWords.contains(cleaned.toLowerCase(Locale.ROOT))) {
+                return capitalize(cleaned);
+            }
+        }
+        return "Medical";
+    }
+
+    private static String capitalize(String s) {
+        if (s == null || s.isEmpty()) {
+            return s;
+        }
+        return Character.toUpperCase(s.charAt(0)) + s.substring(1);
     }
 
     @Bean

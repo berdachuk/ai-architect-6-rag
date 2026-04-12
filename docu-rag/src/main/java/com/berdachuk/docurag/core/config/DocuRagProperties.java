@@ -51,7 +51,7 @@ public class DocuRagProperties {
     }
 
     /**
-     * ExpertMatch-aligned ingestion embedding tuning ({@code docurag.ingestion.embeddings.*}).
+     * Ingestion embedding tuning ({@code docurag.ingestion.embeddings.*}).
      * Multi-endpoint pool wiring is optional; {@link #batchSize} and API sub-batching are used by {@code EmbeddingIndexerImpl}.
      */
     public static class Embeddings {

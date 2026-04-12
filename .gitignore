@@ -22,3 +22,4 @@ docu-rag/data/corpus/subset-manifest.json
 docu-rag/data/pdf-demo/manifest.json
 docu-rag/data/pdf-demo/*.pdf
 docu-rag/data/pdf-demo/**/*.pdf
+/.env

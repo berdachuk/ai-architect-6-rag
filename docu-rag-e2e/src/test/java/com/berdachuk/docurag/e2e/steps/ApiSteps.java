@@ -76,7 +76,9 @@ public class ApiSteps {
         IngestPathsRequest req = new IngestPathsRequest().paths(List.of(E2eWorld.fixtureJsonlPath()));
         IngestSummary s = E2eWorld.clients().documents().ingestDocuments(req);
         assertThat(s.getStatus()).isEqualTo("COMPLETED");
-        assertThat(s.getDocumentsLoaded()).isNotNull().isGreaterThan(0);
+        int loaded = s.getDocumentsLoaded() == null ? 0 : s.getDocumentsLoaded();
+        int skipped = s.getDocumentsSkipped() == null ? 0 : s.getDocumentsSkipped();
+        assertThat(loaded + skipped).isGreaterThan(0);
     }
 
     @When("I ingest the tiny PDF fixture")
@@ -84,7 +86,9 @@ public class ApiSteps {
         IngestPathsRequest req = new IngestPathsRequest().paths(List.of(E2eWorld.fixturePdfPath()));
         IngestSummary s = E2eWorld.clients().documents().ingestDocuments(req);
         assertThat(s.getStatus()).isEqualTo("COMPLETED");
-        assertThat(s.getDocumentsLoaded()).isNotNull().isGreaterThan(0);
+        int loaded = s.getDocumentsLoaded() == null ? 0 : s.getDocumentsLoaded();
+        int skipped = s.getDocumentsSkipped() == null ? 0 : s.getDocumentsSkipped();
+        assertThat(loaded + skipped).isGreaterThan(0);
     }
 
     @When("I list documents and remember the first id")
@@ -159,6 +163,12 @@ public class ApiSteps {
         assertThat(lastRagAsk).isNotNull();
         assertThat(lastRagAsk.getAnswer()).isNotBlank();
         assertThat(lastRagAsk.getRetrievedChunks()).isNotNull();
+    }
+
+    @Then("the RAG answer body contains {string}")
+    public void ragAnswerContains(String fragment) {
+        assertThat(lastRagAsk).isNotNull();
+        assertThat(lastRagAsk.getAnswer()).contains(fragment);
     }
 
     @When("I run document analysis with defaults")

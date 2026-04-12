@@ -132,7 +132,7 @@ public class StructuredFileParser {
                 }
             }
         }
-        return null;
+        return "";
     }
 
     public record ParsedDocument(
