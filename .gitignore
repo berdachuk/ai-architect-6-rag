@@ -1,0 +1,24 @@
+/.idea/
+/.cursor/
+/build/
+
+# Documentation build output
+/site/
+/.plantuml-cache/
+
+# Maven / Java build output
+**/target/
+
+# Generated sources and reports
+**/generated-sources/
+**/surefire-reports/
+**/failsafe-reports/
+**/cucumber-reports/
+
+# Local sample data (downloaded/prepared from Hugging Face / PDFs)
+docu-rag/data/_hf/
+docu-rag/data/corpus/_sample/
+docu-rag/data/corpus/subset-manifest.json
+docu-rag/data/pdf-demo/manifest.json
+docu-rag/data/pdf-demo/*.pdf
+docu-rag/data/pdf-demo/**/*.pdf

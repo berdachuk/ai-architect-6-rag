@@ -1,0 +1,620 @@
+openapi: 3.0.3
+info:
+  title: DocuRAG REST API
+  description: Medical document RAG — Spring Boot. E2E client source of truth; keep aligned with controllers under com.berdachuk.docurag.web.rest.
+  version: 0.1.0
+servers:
+  - url: http://localhost:8080
+    description: Local default
+  - url: http://localhost:18080
+    description: Local E2E / stub-AI profile
+
+tags:
+  - name: documents
+  - name: index
+  - name: rag
+  - name: evaluation
+  - name: visualizations
+  - name: actuator
+
+paths:
+  /api/documents/ingest:
+    post:
+      tags: [documents]
+      operationId: ingestDocuments
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IngestPathsRequest'
+      responses:
+        '200':
+          description: Ingest summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestSummary'
+
+  /api/documents:
+    get:
+      tags: [documents]
+      operationId: listDocuments
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Page of document summaries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SourceDocumentSummary'
+
+  /api/documents/{id}:
+    get:
+      tags: [documents]
+      operationId: getDocumentById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Document detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SourceDocumentDetail'
+
+  /api/documents/categories:
+    get:
+      tags: [documents]
+      operationId: listDocumentCategories
+      responses:
+        '200':
+          description: Distinct categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  /api/index/rebuild:
+    post:
+      tags: [index]
+      operationId: rebuildIndex
+      responses:
+        '202':
+          description: Accepted
+
+  /api/index/incremental:
+    post:
+      tags: [index]
+      operationId: incrementalIndex
+      responses:
+        '501':
+          description: Not implemented (deferred)
+          content:
+            application/json:
+              schema:
+                type: string
+            text/plain:
+              schema:
+                type: string
+
+  /api/index/status:
+    get:
+      tags: [index]
+      operationId: getIndexStatus
+      responses:
+        '200':
+          description: Index and ingest job stats
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IndexStatus'
+
+  /api/rag/ask:
+    post:
+      tags: [rag]
+      operationId: ragAsk
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RagAskRequest'
+      responses:
+        '200':
+          description: Answer and retrieved chunks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RagAskResponse'
+
+  /api/rag/analyze:
+    post:
+      tags: [rag]
+      operationId: ragAnalyze
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalysisRequest'
+      responses:
+        '200':
+          description: Extraction result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisResponse'
+
+  /api/evaluation/run:
+    post:
+      tags: [evaluation]
+      operationId: runEvaluation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EvaluationRunRequest'
+      responses:
+        '200':
+          description: Run finished synchronously with aggregate metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvaluationRunStartedResponse'
+
+  /api/evaluation/runs:
+    get:
+      tags: [evaluation]
+      operationId: listEvaluationRuns
+      responses:
+        '200':
+          description: All run summaries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EvaluationRunSummary'
+
+  /api/evaluation/runs/{id}:
+    get:
+      tags: [evaluation]
+      operationId: getEvaluationRun
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Run detail with per-case rows
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvaluationRunDetail'
+        '404':
+          description: Not found
+
+  /api/evaluation/latest:
+    get:
+      tags: [evaluation]
+      operationId: getLatestEvaluation
+      responses:
+        '200':
+          description: Latest run detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvaluationRunDetail'
+        '404':
+          description: No runs yet
+
+  /api/visualizations/categories/pie:
+    get:
+      tags: [visualizations]
+      operationId: getCategoriesPie
+      responses:
+        '200':
+          description: Pie chart data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PieChartResponse'
+
+  /api/visualizations/entities/graph:
+    get:
+      tags: [visualizations]
+      operationId: getEntitiesGraph
+      responses:
+        '200':
+          description: Entity graph data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GraphVisualizationResponse'
+
+  /actuator/health:
+    get:
+      tags: [actuator]
+      operationId: getHealth
+      responses:
+        '200':
+          description: Spring Boot health (shape varies by version)
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+components:
+  schemas:
+    IngestPathsRequest:
+      type: object
+      properties:
+        paths:
+          type: array
+          items:
+            type: string
+
+    IngestSummary:
+      type: object
+      properties:
+        jobId:
+          type: string
+        documentsLoaded:
+          type: integer
+          format: int32
+        documentsSkipped:
+          type: integer
+          format: int32
+        status:
+          type: string
+        errorMessage:
+          type: string
+          nullable: true
+
+    SourceDocumentSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        externalId:
+          type: string
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        category:
+          type: string
+          nullable: true
+        sourceFormat:
+          type: string
+          nullable: true
+
+    SourceDocumentDetail:
+      type: object
+      properties:
+        id:
+          type: string
+        externalId:
+          type: string
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        category:
+          type: string
+          nullable: true
+        sourceName:
+          type: string
+          nullable: true
+        sourceUrl:
+          type: string
+          nullable: true
+        content:
+          type: string
+          nullable: true
+        sourceFormat:
+          type: string
+          nullable: true
+
+    IndexStatus:
+      type: object
+      properties:
+        documentCount:
+          type: integer
+          format: int64
+        chunkCount:
+          type: integer
+          format: int64
+        embeddedChunkCount:
+          type: integer
+          format: int64
+        lastIngestJobId:
+          type: string
+          nullable: true
+        lastIngestStatus:
+          type: string
+          nullable: true
+        lastIngestStartedAt:
+          type: string
+          format: date-time
+          nullable: true
+        lastIngestFinishedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    RagAskRequest:
+      type: object
+      required: [question]
+      properties:
+        question:
+          type: string
+        topK:
+          type: integer
+          format: int32
+        minScore:
+          type: number
+          format: double
+
+    RetrievedChunkDto:
+      type: object
+      properties:
+        documentId:
+          type: string
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        category:
+          type: string
+          nullable: true
+        score:
+          type: number
+          format: double
+        snippet:
+          type: string
+          nullable: true
+
+    RagAskResponse:
+      type: object
+      properties:
+        answer:
+          type: string
+          nullable: true
+        model:
+          type: string
+          nullable: true
+        retrievedChunks:
+          type: array
+          items:
+            $ref: '#/components/schemas/RetrievedChunkDto'
+
+    AnalysisRequest:
+      type: object
+      properties:
+        maxDocuments:
+          type: integer
+          format: int32
+          nullable: true
+
+    CategoryCount:
+      type: object
+      properties:
+        category:
+          type: string
+        count:
+          type: integer
+          format: int64
+
+    AnalysisGraphNode:
+      type: object
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+          nullable: true
+        type:
+          type: string
+          nullable: true
+
+    AnalysisGraphEdge:
+      type: object
+      properties:
+        source:
+          type: string
+        target:
+          type: string
+        relation:
+          type: string
+          nullable: true
+
+    AnalysisResponse:
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryCount'
+        graphNodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalysisGraphNode'
+        graphEdges:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalysisGraphEdge'
+        extractionNotes:
+          type: string
+          nullable: true
+
+    EvaluationRunRequest:
+      type: object
+      required: [datasetName]
+      properties:
+        datasetName:
+          type: string
+        topK:
+          type: integer
+          format: int32
+        minScore:
+          type: number
+          format: double
+        semanticPassThreshold:
+          type: number
+          format: double
+
+    EvaluationRunStartedResponse:
+      type: object
+      properties:
+        runId:
+          type: string
+        total:
+          type: integer
+          format: int32
+        normalizedAccuracy:
+          type: number
+          format: double
+        meanSemanticSimilarity:
+          type: number
+          format: double
+        semanticAccuracyAt080:
+          type: number
+          format: double
+
+    EvaluationRunSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        datasetId:
+          type: string
+          nullable: true
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+        finishedAt:
+          type: string
+          format: date-time
+          nullable: true
+        modelName:
+          type: string
+          nullable: true
+        embeddingModelName:
+          type: string
+          nullable: true
+        normalizedAccuracy:
+          type: number
+          nullable: true
+        meanSemanticSimilarity:
+          type: number
+          nullable: true
+        semanticAccuracyAt080:
+          type: number
+          nullable: true
+
+    EvaluationCaseResult:
+      type: object
+      properties:
+        caseId:
+          type: string
+        question:
+          type: string
+          nullable: true
+        groundTruth:
+          type: string
+          nullable: true
+        predictedAnswer:
+          type: string
+          nullable: true
+        exactMatch:
+          type: boolean
+        normalizedMatch:
+          type: boolean
+        semanticSimilarity:
+          type: number
+          nullable: true
+        semanticPass:
+          type: boolean
+
+    EvaluationRunDetail:
+      type: object
+      properties:
+        summary:
+          $ref: '#/components/schemas/EvaluationRunSummary'
+        cases:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvaluationCaseResult'
+
+    PieChartResponse:
+      type: object
+      properties:
+        labels:
+          type: array
+          items:
+            type: string
+        values:
+          type: array
+          items:
+            type: integer
+            format: int64
+
+    VizGraphNode:
+      type: object
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+          nullable: true
+        type:
+          type: string
+          nullable: true
+
+    VizGraphEdge:
+      type: object
+      properties:
+        source:
+          type: string
+        target:
+          type: string
+        relation:
+          type: string
+          nullable: true
+
+    GraphVisualizationResponse:
+      type: object
+      properties:
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/VizGraphNode'
+        edges:
+          type: array
+          items:
+            $ref: '#/components/schemas/VizGraphEdge'

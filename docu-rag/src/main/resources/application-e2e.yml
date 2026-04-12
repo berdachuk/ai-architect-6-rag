@@ -1,0 +1,16 @@
+# Profile: e2e — black-box E2E against Docker Compose Postgres (stub AI via TestAIConfig).
+spring:
+  datasource:
+    url: jdbc:postgresql://${E2E_PG_HOST:localhost}:${E2E_PG_PORT:5433}/docurag
+    username: docurag
+    password: docurag
+  flyway:
+    enabled: true
+
+server:
+  port: ${E2E_APP_PORT:18080}
+
+logging:
+  level:
+    root: WARN
+    com.berdachuk.docurag: INFO

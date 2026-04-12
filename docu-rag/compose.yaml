@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: docurag
+      POSTGRES_USER: docurag
+      POSTGRES_PASSWORD: docurag
+    ports:
+      # Avoid clash with a host PostgreSQL service on 5432; app uses this in application-local.yml.
+      - "5433:5432"
+    volumes:
+      - docurag_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U docurag -d docurag"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  docurag_pgdata:

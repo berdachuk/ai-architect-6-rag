@@ -1,0 +1,20 @@
+target/
+# Local-only Spring profile (secrets, machine-specific URLs)
+src/main/resources/application-local.yml
+.idea/
+*.iml
+.env
+*.log
+# Local tooling artifacts
+cp.txt
+curl-home.html
+# Stray output at module root (not src/)
+/org/
+
+# Local sample data (downloaded/prepared from Hugging Face / PDFs)
+/data/_hf/
+/data/corpus/_sample/
+/data/corpus/subset-manifest.json
+/data/pdf-demo/manifest.json
+/data/pdf-demo/*.pdf
+/data/pdf-demo/**/*.pdf
