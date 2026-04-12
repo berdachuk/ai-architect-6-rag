@@ -15,8 +15,11 @@ spring:
   flyway:
     enabled: true
 
+logging:
+  file:
+    name: logs/docu-rag-local.log
+
 # Optional: disable auto browser-open if you find it annoying.
 # docurag:
 #   local:
 #     open-browser-on-start: false
-

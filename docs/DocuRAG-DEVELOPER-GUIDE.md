@@ -6,11 +6,11 @@ How to **build**, **run Postgres in Docker**, **start the Spring Boot app**, and
 
 ## Prerequisites
 
-| Tool | Notes |
-|------|--------|
-| **JDK 21** | `java -version` |
-| **Maven 3.9+** | `mvn -version` |
-| **Docker** | Engine + Compose v2 (`docker compose version`) |
+| Tool                                        | Notes                                                          |
+|---------------------------------------------|----------------------------------------------------------------|
+| **JDK 21**                                  | `java -version`                                                |
+| **Maven 3.9+**                              | `mvn -version`                                                 |
+| **Docker**                                  | Engine + Compose v2 (`docker compose version`)                 |
 | **Ollama** (or other OpenAI-compatible API) | Chat + embeddings; defaults assume `http://localhost:11434/v1` |
 
 ---
@@ -21,12 +21,12 @@ The app expects **PostgreSQL 16 with pgvector**. A Compose file is already in th
 
 **File:** [`docu-rag/compose.yaml`](https://github.com/berdachuk/ai-architect-6-rag/blob/main/docu-rag/compose.yaml)
 
-| Setting | Value |
-|---------|--------|
-| Image | `pgvector/pgvector:pg16` |
-| Database | `docurag` |
-| User / password | `docurag` / `docurag` |
-| Host port | **5433** (mapped to container `5432`, avoids clashing with a local Postgres on 5432) |
+| Setting         | Value                                                                                |
+|-----------------|--------------------------------------------------------------------------------------|
+| Image           | `pgvector/pgvector:pg16`                                                             |
+| Database        | `docurag`                                                                            |
+| User / password | `docurag` / `docurag`                                                                |
+| Host port       | **5433** (mapped to container `5432`, avoids clashing with a local Postgres on 5432) |
 
 ### Commands (from `docu-rag/`)
 
