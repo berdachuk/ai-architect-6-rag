@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>DocuRAG — Analysis</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+    <style>
+        body { font-family: system-ui, sans-serif; margin: 0; background: #f6f7f9; }
+        main { padding: 1.5rem; max-width: 960px; margin: 0 auto; }
+        .disclaimer { background: #fff3cd; border: 1px solid #ffc107; padding: 0.75rem 1rem; margin: 1rem 1.5rem; border-radius: 6px; font-size: 0.9rem; }
+        .card { background: #fff; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
+        #pieChart { max-width: 420px; }
+        #entityGraph { height: 420px; border: 1px solid #ddd; background: #fff; }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/common :: nav}"></div>
+<div th:replace="~{fragments/disclaimer :: disclaimer}"></div>
+<main>
+    <h1>Analysis</h1>
+    <div class="card">
+        <h2>Categories</h2>
+        <canvas id="pieChart"></canvas>
+    </div>
+    <div class="card">
+        <h2>Entity graph</h2>
+        <div id="entityGraph"></div>
+    </div>
+</main>
+<script>
+    const colors = ['#4e79a7','#f28e2b','#e15759','#76b7b2','#59a14f','#edc948','#b07aa1','#ff9da7','#9c755f','#bab0ab'];
+
+    async function loadCharts() {
+        const pieRes = await fetch('/api/visualizations/categories/pie');
+        const pie = await pieRes.json();
+        new Chart(document.getElementById('pieChart'), {
+            type: 'pie',
+            data: {
+                labels: pie.labels,
+                datasets: [{ data: pie.values, backgroundColor: colors }]
+            },
+            options: { plugins: { legend: { position: 'bottom' } } }
+        });
+
+        const gRes = await fetch('/api/visualizations/entities/graph');
+        const g = await gRes.json();
+        const nodes = new vis.DataSet((g.nodes || []).map(n => ({ id: n.id, label: n.label, group: n.type })));
+        const edges = new vis.DataSet((g.edges || []).map((e, i) => ({ id: 'e' + i, from: e.source, to: e.target, label: e.relation })));
+        new vis.Network(document.getElementById('entityGraph'), { nodes, edges }, {
+            physics: { stabilization: true },
+            edges: { arrows: 'to', font: { align: 'middle' } }
+        });
+    }
+    loadCharts().catch(console.error);
+</script>
+</body>
+</html>

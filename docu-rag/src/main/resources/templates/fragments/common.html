@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head-scripts">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+</head>
+<body>
+<header th:fragment="nav">
+    <div style="background:#1e3a5f;color:#fff;padding:1rem 1.5rem;">
+        <strong>DocuRAG</strong>
+        <nav style="margin-top:0.5rem;">
+            <a style="color:#b8d4ff;margin-right:1rem;" href="/">Dashboard</a>
+            <a style="color:#b8d4ff;margin-right:1rem;" href="/qa">QA</a>
+            <a style="color:#b8d4ff;margin-right:1rem;" href="/documents">Documents</a>
+            <a style="color:#b8d4ff;margin-right:1rem;" href="/analysis">Analysis</a>
+            <a style="color:#b8d4ff;margin-right:1rem;" href="/evaluation">Evaluation</a>
+        </nav>
+    </div>
+</header>
+</body>
+</html>

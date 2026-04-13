@@ -1,0 +1,69 @@
+spring:
+  application:
+    name: docu-rag
+  ai:
+    openai:
+      enabled: false
+    custom:
+      chat:
+        # Default: local Ollama OpenAI-compatible API. Override with CHAT_BASE_URL or shared OLLAMA_BASE_URL.
+        base-url: ${CHAT_BASE_URL:${OLLAMA_BASE_URL:http://localhost:11434/v1}}
+        api-key: ${CHAT_API_KEY:}
+        model: ${CHAT_MODEL:gemma4:31b-cloud}
+        temperature: 0.7
+        max-tokens: 2048
+      embedding:
+        provider: ${EMBEDDING_PROVIDER:openai}
+        base-url: ${EMBEDDING_BASE_URL:${OLLAMA_BASE_URL:http://localhost:11434/v1}}
+        api-key: ${EMBEDDING_API_KEY:}
+        model: ${EMBEDDING_MODEL:nomic-embed-text}
+        dimensions: ${EMBEDDING_DIMENSIONS:768}
+  autoconfigure:
+    exclude:
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiChatAutoConfiguration
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiEmbeddingAutoConfiguration
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiImageAutoConfiguration
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiAudioSpeechAutoConfiguration
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiAudioTranscriptionAutoConfiguration
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiModerationAutoConfiguration
+  thymeleaf:
+    cache: false
+  flyway:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+
+docurag:
+  ingestion:
+    corpus-path: ${DOCURAG_CORPUS_PATH:}
+    pdf-demo-path: ${DOCURAG_PDF_DEMO_PATH:}
+    embeddings:
+      # Bulk embedding / indexing tuning (ExpertMatch-style). Multi-endpoint pool is bound here for future use.
+      parallel-with-ingest: false
+      batch-size: 32
+      progress-log-interval-batches: 1
+      drop-indexes-during-generation: false
+      multi-endpoint:
+        # OpenAI-compatible Ollama hosts (host:port, no /v1 path). Lower priority value = preferred first.
+        skip-duration-min: ${EMBEDDING_MULTI_SKIP_DURATION_MIN:10}
+        worker-per-endpoint: ${EMBEDDING_MULTI_WORKER_PER_ENDPOINT:1}
+        api-batch-size: ${EMBEDDING_API_BATCH_SIZE:50}
+        endpoints:
+          - url: ${EMBEDDING_MULTI_URL_1:http://localhost:11434}
+            model: ${EMBEDDING_MODEL:nomic-embed-text}
+            priority: 1
+  chunking:
+    chunk-size: 512
+    chunk-overlap: 64
+    min-chunk-chars: 50
+  rag:
+    default-top-k: 5
+    default-min-score: 0.5

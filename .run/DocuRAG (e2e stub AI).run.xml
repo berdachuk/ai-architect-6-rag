@@ -1,0 +1,16 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="DocuRAG (e2e stub AI)" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="com.berdachuk.docurag.DocuRagApplication" />
+    <module name="docu-rag" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/docu-rag" />
+    <envs>
+      <!-- Uses application-e2e.yml: server.port=18080, datasource localhost:5433, stub AI beans -->
+      <env name="SPRING_PROFILES_ACTIVE" value="e2e" />
+      <env name="DOCURAG_CORPUS_PATH" value="$PROJECT_DIR$/docu-rag/data/corpus/_sample/medical-rag-corpus.sample.500.jsonl" />
+    </envs>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
+

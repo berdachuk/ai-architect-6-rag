@@ -1,0 +1,25 @@
+#
+# Local developer profile template.
+#
+# Copy this file to `application-local.yml` (gitignored) if you want to run:
+#   mvn spring-boot:run -Dspring-boot.run.profiles=local
+#
+# Keep secrets (API keys) in environment variables, not in the copied file.
+#
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5433/docurag
+    username: docurag
+    password: docurag
+  flyway:
+    enabled: true
+
+logging:
+  file:
+    name: logs/docu-rag-local.log
+
+# Optional: disable auto browser-open if you find it annoying.
+# docurag:
+#   local:
+#     open-browser-on-start: false

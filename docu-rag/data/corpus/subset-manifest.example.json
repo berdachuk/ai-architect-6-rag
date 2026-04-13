@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "primaryDataset": {
+    "id": "Sagarika-Singh-99/medical-rag-corpus",
+    "canonicalUrl": "https://huggingface.co/datasets/Sagarika-Singh-99/medical-rag-corpus",
+    "description": "English medical RAG-oriented corpus (structured export, not PDFs)."
+  },
+  "subsetPolicy": {
+    "targetDocumentCountMin": 2000,
+    "targetDocumentCountMax": 5000,
+    "categoryCountMin": 3,
+    "categoryCountMax": 5,
+    "suggestedCategories": [
+      "cardiology",
+      "endocrinology",
+      "infectious",
+      "neurology",
+      "pulmonology"
+    ],
+    "notes": "Adjust categories to match actual column names in your HF export. Prefer balanced sampling across categories for charts and eval."
+  },
+  "export": {
+    "format": "jsonl",
+    "requiredFields": ["text", "title", "category", "source"],
+    "idFieldCandidates": ["id", "document_id", "uuid"],
+    "encoding": "UTF-8"
+  },
+  "localIngest": {
+    "envVar": "DOCURAG_CORPUS_PATH",
+    "applicationProperty": "docurag.ingestion.corpus-path",
+    "ingestApi": "POST /api/documents/ingest with JSON body { \"paths\": [ \"<absolute-path-to-file-or-directory>\" ] }"
+  }
+}

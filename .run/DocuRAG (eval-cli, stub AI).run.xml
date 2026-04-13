@@ -1,0 +1,16 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="DocuRAG (eval-cli, stub AI)" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="com.berdachuk.docurag.DocuRagApplication" />
+    <module name="docu-rag" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/docu-rag" />
+    <option name="PROGRAM_PARAMETERS" value="--dataset=medical-rag-eval-v1 --topK=5 --minScore=0.5 --semanticPassThreshold=0.8" />
+    <envs>
+      <!-- eval-cli runs once and exits; e2e provides datasource + stub AI -->
+      <env name="SPRING_PROFILES_ACTIVE" value="e2e,eval-cli" />
+    </envs>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
+

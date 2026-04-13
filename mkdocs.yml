@@ -1,0 +1,99 @@
+site_name: DocuRAG Documentation
+site_description: DocuRAG - Medical document RAG with Spring Modulith, PostgreSQL + pgvector, and PDF ingestion
+site_author: DocuRAG Team
+site_url: https://berdachuk.github.io/ai-architect-6-rag/
+
+repo_name: berdachuk/ai-architect-6-rag
+repo_url: https://github.com/berdachuk/ai-architect-6-rag
+edit_uri: edit/main/docs/
+
+copyright: Copyright &copy; 2026 DocuRAG Team
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.annotate
+    - content.code.copy
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search:
+      lang: en
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - plantuml_markdown:
+      server: https://www.plantuml.com/plantuml
+      cachedir: .plantuml-cache
+      format: svg
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - admonition
+  - pymdownx.details
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+
+nav:
+  - Home: index.md
+  - AI Context: ai-context-strategy.md
+  - Product:
+      - PRD: DocuRAG-PRD.md
+      - Use Cases: DocuRAG-USE-CASES.md
+      - User Stories: DocuRAG-USER-STORIES.md
+  - Architecture:
+      - Architecture Overview: DocuRAG-ARCHITECTURE.md
+      - Forms and Flows: DocuRAG-FORMS-AND-FLOWS.md
+      - Wireframes: DocuRAG-WIREFRAMES.md
+  - Delivery:
+      - Implementation Plan WBS: DocuRAG-IMPLEMENTATION-PLAN-WBS.md
+      - Datasets: DocuRAG-Datasets.md
+      - Developer Guide: DocuRAG-DEVELOPER-GUIDE.md
+      - Docs Agent Guide: AGENTS.md
+  - Submission:
+      - Submission Notes: submission/README.md
+
+extra:
+  version:
+    provider: mike
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/berdachuk/ai-architect-6-rag
+
+extra_css:
+  - stylesheets/extra.css
