@@ -5,6 +5,7 @@ import com.berdachuk.docurag.documents.api.DocumentIngestApi;
 import com.berdachuk.docurag.documents.api.IngestSummary;
 import com.berdachuk.docurag.documents.api.SourceDocumentDetail;
 import com.berdachuk.docurag.documents.api.SourceDocumentSummary;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,15 +19,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/documents")
+@RequiredArgsConstructor
 public class DocumentsRestController {
 
     private final DocumentIngestApi documentIngestApi;
     private final DocumentCatalogApi documentCatalogApi;
-
-    public DocumentsRestController(DocumentIngestApi documentIngestApi, DocumentCatalogApi documentCatalogApi) {
-        this.documentIngestApi = documentIngestApi;
-        this.documentCatalogApi = documentCatalogApi;
-    }
 
     @PostMapping("/ingest")
     public ResponseEntity<IngestSummary> ingest(@RequestBody(required = false) IngestPathsRequest body) {

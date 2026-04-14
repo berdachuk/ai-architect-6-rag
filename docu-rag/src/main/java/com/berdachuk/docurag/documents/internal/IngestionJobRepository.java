@@ -2,6 +2,7 @@ package com.berdachuk.docurag.documents.internal;
 
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
+import lombok.RequiredArgsConstructor;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -9,13 +10,10 @@ import java.util.Map;
 import java.util.Optional;
 
 @Repository
+@RequiredArgsConstructor
 public class IngestionJobRepository {
 
     private final NamedParameterJdbcTemplate jdbc;
-
-    public IngestionJobRepository(NamedParameterJdbcTemplate jdbc) {
-        this.jdbc = jdbc;
-    }
 
     public void insertStarted(String id, OffsetDateTime started) {
         jdbc.update("""

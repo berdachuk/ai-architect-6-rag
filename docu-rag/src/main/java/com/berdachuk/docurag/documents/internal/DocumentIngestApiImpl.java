@@ -4,6 +4,7 @@ import com.berdachuk.docurag.core.config.DocuRagProperties;
 import com.berdachuk.docurag.core.util.IdGenerator;
 import com.berdachuk.docurag.documents.api.DocumentIngestApi;
 import com.berdachuk.docurag.documents.api.IngestSummary;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
@@ -20,6 +21,7 @@ import java.util.Locale;
 import java.util.stream.Stream;
 
 @Service
+@RequiredArgsConstructor
 public class DocumentIngestApiImpl implements DocumentIngestApi {
 
     private static final Logger log = LoggerFactory.getLogger(DocumentIngestApiImpl.class);
@@ -30,20 +32,6 @@ public class DocumentIngestApiImpl implements DocumentIngestApi {
     private final IngestionJobRepository jobs;
     private final StructuredFileParser structuredParser;
     private final PdfTextExtractor pdfTextExtractor;
-
-    public DocumentIngestApiImpl(
-            DocuRagProperties properties,
-            DocumentJdbcRepository documents,
-            IngestionJobRepository jobs,
-            StructuredFileParser structuredParser,
-            PdfTextExtractor pdfTextExtractor
-    ) {
-        this.properties = properties;
-        this.documents = documents;
-        this.jobs = jobs;
-        this.structuredParser = structuredParser;
-        this.pdfTextExtractor = pdfTextExtractor;
-    }
 
     @Override
     @Transactional

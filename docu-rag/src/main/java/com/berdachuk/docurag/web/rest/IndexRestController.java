@@ -2,6 +2,7 @@ package com.berdachuk.docurag.web.rest;
 
 import com.berdachuk.docurag.vector.api.IndexOperationsApi;
 import com.berdachuk.docurag.vector.api.IndexStatus;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,13 +12,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/index")
+@RequiredArgsConstructor
 public class IndexRestController {
 
     private final IndexOperationsApi indexOperationsApi;
-
-    public IndexRestController(IndexOperationsApi indexOperationsApi) {
-        this.indexOperationsApi = indexOperationsApi;
-    }
 
     @PostMapping("/rebuild")
     public ResponseEntity<Void> rebuild() {

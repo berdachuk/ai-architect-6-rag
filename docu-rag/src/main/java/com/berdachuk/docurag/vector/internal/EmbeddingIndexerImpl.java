@@ -3,6 +3,7 @@ package com.berdachuk.docurag.vector.internal;
 import com.berdachuk.docurag.core.config.DocuRagProperties;
 import com.berdachuk.docurag.core.util.PgVector;
 import com.berdachuk.docurag.vector.api.EmbeddingIndexerApi;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.embedding.EmbeddingModel;
@@ -14,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class EmbeddingIndexerImpl implements EmbeddingIndexerApi {
 
     private static final Logger log = LoggerFactory.getLogger(EmbeddingIndexerImpl.class);
@@ -22,16 +24,6 @@ public class EmbeddingIndexerImpl implements EmbeddingIndexerApi {
     private final EmbeddingModel embeddingModel;
     private final EmbeddingJdbcRepository repository;
     private final DocuRagProperties docuRagProperties;
-
-    public EmbeddingIndexerImpl(
-            EmbeddingModel embeddingModel,
-            EmbeddingJdbcRepository repository,
-            DocuRagProperties docuRagProperties
-    ) {
-        this.embeddingModel = embeddingModel;
-        this.repository = repository;
-        this.docuRagProperties = docuRagProperties;
-    }
 
     @Override
     @Transactional

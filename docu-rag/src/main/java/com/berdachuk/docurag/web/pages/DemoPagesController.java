@@ -11,6 +11,7 @@ import com.berdachuk.docurag.llm.api.RagAskRequest;
 import com.berdachuk.docurag.llm.api.RagAskResponse;
 import com.berdachuk.docurag.vector.api.IndexOperationsApi;
 import com.berdachuk.docurag.vector.api.IndexStatus;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.util.Optional;
 
 @Controller
+@RequiredArgsConstructor
 public class DemoPagesController {
 
     private final IndexOperationsApi indexOperationsApi;
@@ -27,20 +29,6 @@ public class DemoPagesController {
     private final DocumentIngestApi documentIngestApi;
     private final RagAskApi ragAskApi;
     private final EvaluationApi evaluationApi;
-
-    public DemoPagesController(
-            IndexOperationsApi indexOperationsApi,
-            DocumentCatalogApi documentCatalogApi,
-            DocumentIngestApi documentIngestApi,
-            RagAskApi ragAskApi,
-            EvaluationApi evaluationApi
-    ) {
-        this.indexOperationsApi = indexOperationsApi;
-        this.documentCatalogApi = documentCatalogApi;
-        this.documentIngestApi = documentIngestApi;
-        this.ragAskApi = ragAskApi;
-        this.evaluationApi = evaluationApi;
-    }
 
     @GetMapping("/")
     public String home(Model model) {

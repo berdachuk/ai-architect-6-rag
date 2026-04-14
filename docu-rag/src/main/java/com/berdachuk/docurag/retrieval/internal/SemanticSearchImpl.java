@@ -3,6 +3,7 @@ package com.berdachuk.docurag.retrieval.internal;
 import com.berdachuk.docurag.core.util.PgVector;
 import com.berdachuk.docurag.retrieval.api.ChunkHit;
 import com.berdachuk.docurag.retrieval.api.SemanticSearchApi;
+import lombok.RequiredArgsConstructor;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -13,17 +14,13 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@RequiredArgsConstructor
 public class SemanticSearchImpl implements SemanticSearchApi {
 
     private static final int SNIPPET_MAX = 600;
 
     private final EmbeddingModel embeddingModel;
     private final NamedParameterJdbcTemplate jdbc;
-
-    public SemanticSearchImpl(EmbeddingModel embeddingModel, NamedParameterJdbcTemplate jdbc) {
-        this.embeddingModel = embeddingModel;
-        this.jdbc = jdbc;
-    }
 
     @Override
     public List<ChunkHit> search(String query, int topK, double minScore) {

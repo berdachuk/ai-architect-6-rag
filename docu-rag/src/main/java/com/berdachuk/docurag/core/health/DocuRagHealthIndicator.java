@@ -1,15 +1,15 @@
 package com.berdachuk.docurag.core.health;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.embedding.EmbeddingModel;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.lang.Nullable;
+import jakarta.annotation.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -18,11 +18,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
-/**
- * Aggregated health: primary database, pgvector / {@code document_chunk.embedding}, chat and embedding model
- * configuration (cached to avoid extra work). Aligns with ExpertMatch {@code ComprehensiveHealthIndicator} style.
- */
 @Component
+@RequiredArgsConstructor
 public class DocuRagHealthIndicator implements HealthIndicator {
 
     private static final Logger log = LoggerFactory.getLogger(DocuRagHealthIndicator.class);
@@ -31,24 +28,13 @@ public class DocuRagHealthIndicator implements HealthIndicator {
 
     private final NamedParameterJdbcTemplate jdbc;
     private final Environment environment;
+    @Nullable
     private final ChatModel chatModel;
+    @Nullable
     private final EmbeddingModel embeddingModel;
 
     private final AtomicReference<CachedHealthResult> llmHealthCache = new AtomicReference<>();
     private final AtomicReference<CachedHealthResult> embeddingHealthCache = new AtomicReference<>();
-
-    @Autowired
-    public DocuRagHealthIndicator(
-            NamedParameterJdbcTemplate jdbc,
-            Environment environment,
-            @Nullable ChatModel chatModel,
-            @Nullable EmbeddingModel embeddingModel
-    ) {
-        this.jdbc = jdbc;
-        this.environment = environment;
-        this.chatModel = chatModel;
-        this.embeddingModel = embeddingModel;
-    }
 
     @Override
     public Health health() {

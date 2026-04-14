@@ -2,6 +2,7 @@ package com.berdachuk.docurag.documents.internal;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
@@ -15,13 +16,10 @@ import java.util.List;
 import java.util.Locale;
 
 @Component
+@RequiredArgsConstructor
 public class StructuredFileParser {
 
     private final ObjectMapper objectMapper;
-
-    public StructuredFileParser(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
 
     public List<ParsedDocument> parseFile(Path path) throws IOException {
         String name = path.getFileName().toString().toLowerCase(Locale.ROOT);

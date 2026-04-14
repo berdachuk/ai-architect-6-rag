@@ -1,18 +1,16 @@
 package com.berdachuk.docurag.chunking.internal;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.Map;
 
 @Repository
+@RequiredArgsConstructor
 public class ChunkJdbcRepository {
 
     private final NamedParameterJdbcTemplate jdbc;
-
-    public ChunkJdbcRepository(NamedParameterJdbcTemplate jdbc) {
-        this.jdbc = jdbc;
-    }
 
     public void deleteByDocumentId(String documentId) {
         jdbc.update(

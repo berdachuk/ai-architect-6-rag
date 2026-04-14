@@ -3,19 +3,17 @@ package com.berdachuk.docurag.documents.internal;
 import com.berdachuk.docurag.documents.api.DocumentCatalogApi;
 import com.berdachuk.docurag.documents.api.SourceDocumentDetail;
 import com.berdachuk.docurag.documents.api.SourceDocumentSummary;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class DocumentCatalogApiImpl implements DocumentCatalogApi {
 
     private final DocumentJdbcRepository repository;
-
-    public DocumentCatalogApiImpl(DocumentJdbcRepository repository) {
-        this.repository = repository;
-    }
 
     @Override
     public List<SourceDocumentSummary> listDocuments(int page, int pageSize) {

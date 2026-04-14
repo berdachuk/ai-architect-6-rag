@@ -1,5 +1,6 @@
 package com.berdachuk.docurag.documents.internal;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -9,6 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Repository
+@RequiredArgsConstructor
 public class DocumentJdbcRepository {
 
     private static final RowMapper<SourceDocumentEntity> SOURCE_DOCUMENT_ROW_MAPPER = (rs, rowNum) -> new SourceDocumentEntity(
@@ -24,10 +26,6 @@ public class DocumentJdbcRepository {
     );
 
     private final NamedParameterJdbcTemplate jdbc;
-
-    public DocumentJdbcRepository(NamedParameterJdbcTemplate jdbc) {
-        this.jdbc = jdbc;
-    }
 
     public boolean existsByContentHash(String hash) {
         List<Integer> found = jdbc.query(

@@ -15,6 +15,7 @@ import com.berdachuk.docurag.evaluation.api.EvaluationRunSummary;
 import com.berdachuk.docurag.llm.api.RagAskApi;
 import com.berdachuk.docurag.llm.api.RagAskRequest;
 import com.berdachuk.docurag.llm.api.RagAskResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class EvaluationServiceImpl implements EvaluationApi {
 
     private final EvaluationJdbcRepository repository;
@@ -37,24 +39,6 @@ public class EvaluationServiceImpl implements EvaluationApi {
     private final CustomChatProperties chatProperties;
     private final CustomEmbeddingProperties embeddingProperties;
     private final ObjectMapper objectMapper;
-
-    public EvaluationServiceImpl(
-            EvaluationJdbcRepository repository,
-            RagAskApi ragAskApi,
-            EmbeddingModel embeddingModel,
-            DocuRagProperties docuRagProperties,
-            CustomChatProperties chatProperties,
-            CustomEmbeddingProperties embeddingProperties,
-            ObjectMapper objectMapper
-    ) {
-        this.repository = repository;
-        this.ragAskApi = ragAskApi;
-        this.embeddingModel = embeddingModel;
-        this.docuRagProperties = docuRagProperties;
-        this.chatProperties = chatProperties;
-        this.embeddingProperties = embeddingProperties;
-        this.objectMapper = objectMapper;
-    }
 
     @Override
     @Transactional

@@ -5,6 +5,7 @@ import com.berdachuk.docurag.evaluation.api.EvaluationRunDetail;
 import com.berdachuk.docurag.evaluation.api.EvaluationRunRequest;
 import com.berdachuk.docurag.evaluation.api.EvaluationRunStartedResponse;
 import com.berdachuk.docurag.evaluation.api.EvaluationRunSummary;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,13 +18,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/evaluation")
+@RequiredArgsConstructor
 public class EvaluationRestController {
 
     private final EvaluationApi evaluationApi;
-
-    public EvaluationRestController(EvaluationApi evaluationApi) {
-        this.evaluationApi = evaluationApi;
-    }
 
     @PostMapping("/run")
     public EvaluationRunStartedResponse run(@RequestBody EvaluationRunRequest request) {

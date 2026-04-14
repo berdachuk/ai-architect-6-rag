@@ -4,6 +4,7 @@ import com.berdachuk.docurag.chunking.api.ChunkingApi;
 import com.berdachuk.docurag.vector.api.EmbeddingIndexerApi;
 import com.berdachuk.docurag.vector.api.IndexOperationsApi;
 import com.berdachuk.docurag.vector.api.IndexStatus;
+import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,17 +14,12 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@RequiredArgsConstructor
 public class IndexOperationsImpl implements IndexOperationsApi {
 
     private final ChunkingApi chunkingApi;
     private final EmbeddingIndexerApi embeddingIndexerApi;
     private final NamedParameterJdbcTemplate jdbc;
-
-    public IndexOperationsImpl(ChunkingApi chunkingApi, EmbeddingIndexerApi embeddingIndexerApi, NamedParameterJdbcTemplate jdbc) {
-        this.chunkingApi = chunkingApi;
-        this.embeddingIndexerApi = embeddingIndexerApi;
-        this.jdbc = jdbc;
-    }
 
     @Override
     @Transactional
