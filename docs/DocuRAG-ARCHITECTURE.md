@@ -310,7 +310,15 @@ erDiagram
 | Viz | `GET .../visualizations/categories/pie`, `.../entities/graph` |
 | Evaluation | `POST .../evaluation/run`, `GET .../runs`, `.../runs/{id}`, `.../latest` |
 
-### 9.2 Presentation (Thymeleaf)
+### 9.2 API-first contract implementation
+
+- `docu-rag/api/openapi.yaml` is the canonical REST contract for `/api/**`.
+- App build generates Spring server interfaces/models into `target/generated-sources/openapi`.
+- `web.rest` controllers implement generated interfaces from `com.berdachuk.docurag.web.openapi.api` and map to internal module APIs (`*.api` records).
+- Request validation follows OpenAPI-required fields and produces RFC7807-style problem responses for invalid payloads.
+- `docu-rag-e2e` generates its client from the same `openapi.yaml`, keeping provider/consumer in lockstep.
+
+### 9.3 Presentation (Thymeleaf)
 
 | Path | Purpose |
 |------|---------|

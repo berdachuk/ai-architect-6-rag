@@ -26,7 +26,7 @@ Local config template:
 
 ## Key Contracts
 
-- REST surface: `docs/openapi.yaml` (keep aligned with controllers under `com.berdachuk.docurag.web.rest`)
+- REST surface: `api/openapi.yaml` (keep aligned with controllers under `com.berdachuk.docurag.web.rest`)
 - DB schema: Flyway migrations under `src/main/resources/db/migration`
 - IDs: 24-hex ObjectId-style strings (`IdGenerator`)
 

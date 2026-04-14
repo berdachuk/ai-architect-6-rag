@@ -2,8 +2,10 @@ package com.berdachuk.docurag.e2e.steps;
 
 import com.berdachuk.docurag.e2e.ui.PlaywrightContext;
 import com.berdachuk.docurag.e2e.ui.PlaywrightHooks;
+import com.berdachuk.docurag.e2e.infra.E2eInfraLifecycle;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
+import com.microsoft.playwright.PlaywrightException;
 import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.LoadState;
 import com.microsoft.playwright.options.WaitForSelectorState;
@@ -37,12 +39,34 @@ public class UiSteps {
 
     @Given("I open the UI path {string}")
     public void openPath(String path) {
-        currentPage()
-                .navigate(
-                        uiPath(path),
-                        new Page.NavigateOptions()
-                                .setWaitUntil(PlaywrightHooks.navigationWaitUntil())
-                                .setTimeout(90_000));
+        String url = uiPath(path);
+        try {
+            currentPage()
+                    .navigate(
+                            url,
+                            new Page.NavigateOptions()
+                                    .setWaitUntil(PlaywrightHooks.navigationWaitUntil())
+                                    .setTimeout(90_000));
+        } catch (PlaywrightException first) {
+            if (!isConnectionRefused(first)) {
+                throw first;
+            }
+            try {
+                E2eInfraLifecycle.ensureStarted();
+            } catch (Exception e) {
+                throw new IllegalStateException("Failed to recover E2E app availability", e);
+            }
+            currentPage()
+                    .navigate(
+                            url,
+                            new Page.NavigateOptions()
+                                    .setWaitUntil(PlaywrightHooks.navigationWaitUntil())
+                                    .setTimeout(90_000));
+        }
+    }
+
+    private static boolean isConnectionRefused(PlaywrightException e) {
+        return e.getMessage() != null && e.getMessage().contains("ERR_CONNECTION_REFUSED");
     }
 
     @Then("the page shows the medical disclaimer fragment")

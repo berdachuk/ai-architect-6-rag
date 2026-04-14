@@ -1,6 +1,9 @@
 spring:
   application:
     name: docu-rag
+  mvc:
+    problemdetails:
+      enabled: true
   ai:
     openai:
       enabled: false

@@ -91,6 +91,18 @@ cd docu-rag
 mvn verify
 ```
 
+Generate OpenAPI-first server contract artifacts (done automatically by `compile`/`verify`):
+
+```bash
+cd docu-rag
+mvn generate-sources
+```
+
+Generated interfaces/models are emitted under:
+
+- `docu-rag/target/generated-sources/openapi/src/main/java/com/berdachuk/docurag/web/openapi/api`
+- `docu-rag/target/generated-sources/openapi/src/main/java/com/berdachuk/docurag/web/openapi/model`
+
 **Reactor** (app + black-box E2E against Compose + JAR):
 
 ```bash
@@ -115,6 +127,13 @@ Manual equivalent (same profile the scripts activate):
 ```bash
 mvn -f docu-rag-parent/pom.xml clean verify -Pe2e-teardown-volumes
 ```
+
+### API-first workflow
+
+1. Update contract in `docu-rag/api/openapi.yaml`.
+2. Run `mvn -f docu-rag generate-sources` to refresh generated Spring interfaces/models.
+3. Keep `com.berdachuk.docurag.web.rest` controllers implementing generated interfaces from `com.berdachuk.docurag.web.openapi.api`.
+4. Regenerate E2E client (`mvn -f docu-rag-e2e generate-test-sources`) and run relevant E2E scenarios.
 
 ---
 
@@ -170,7 +189,7 @@ mvn spring-boot:run -Dspring-boot.run.profiles=e2e
 
 ## 4. Manual testing (happy path)
 
-Use the **Thymeleaf UI** at `http://localhost:8080/` or the REST API (OpenAPI: [`docu-rag/docs/openapi.yaml`](https://github.com/berdachuk/ai-architect-6-rag/blob/main/docu-rag/docs/openapi.yaml)).
+Use the **Thymeleaf UI** at `http://localhost:8080/` or the REST API (OpenAPI: [`docu-rag/api/openapi.yaml`](https://github.com/berdachuk/ai-architect-6-rag/blob/main/docu-rag/api/openapi.yaml)).
 
 ### 4.1 Health
 

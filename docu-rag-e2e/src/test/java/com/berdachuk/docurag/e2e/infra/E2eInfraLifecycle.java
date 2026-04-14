@@ -103,12 +103,13 @@ public final class E2eInfraLifecycle {
     }
 
     public static void ensureStarted() throws Exception {
-        if (appProcess != null && appProcess.isAlive()) {
-            return;
-        }
         synchronized (LOCK) {
-            if (appProcess != null && appProcess.isAlive()) {
+            if (appProcess != null && appProcess.isAlive() && isHealthy(Duration.ofSeconds(10))) {
                 return;
+            }
+            if (appProcess != null && appProcess.isAlive()) {
+                log.warn("DocuRAG process is alive but health is not UP; restarting app process");
+                stopAppProcessOnly();
             }
             doStart();
         }
@@ -185,6 +186,10 @@ public final class E2eInfraLifecycle {
 
         E2eWorld.setClientFactory(new DocuRagClientFactory(E2eWorld.apiBaseUrl()));
         waitHealthUp(Duration.ofMinutes(2));
+        if (!appProcess.isAlive()) {
+            throw new IllegalStateException(
+                    "DocuRAG process exited immediately after health probe; see target/docurag-e2e-app.log");
+        }
         log.info("DocuRAG E2E infra ready at {}", E2eWorld.apiBaseUrl());
     }
 
@@ -372,6 +377,22 @@ public final class E2eInfraLifecycle {
         throw new IllegalStateException("Timeout waiting for actuator health UP");
     }
 
+    private static boolean isHealthy(Duration timeout) throws InterruptedException {
+        Instant deadline = Instant.now().plus(timeout);
+        DocuRagClientFactory f = E2eWorld.clients();
+        while (Instant.now().isBefore(deadline)) {
+            try {
+                if (isUp(f.actuator().getHealth())) {
+                    return true;
+                }
+            } catch (Exception ignored) {
+                // retry
+            }
+            Thread.sleep(300);
+        }
+        return false;
+    }
+
     /**
      * Use the aggregate {@code status} only. A previous implementation could return true when the root was {@code DOWN}
      * but nested maps looked {@code UP}, which let E2E proceed before the database was actually usable.
@@ -381,19 +402,7 @@ public final class E2eInfraLifecycle {
     }
 
     public static void stopQuietly() {
-        if (appProcess != null) {
-            log.info("Stopping DocuRAG process");
-            appProcess.destroy();
-            try {
-                if (!appProcess.waitFor(30, TimeUnit.SECONDS)) {
-                    appProcess.destroyForcibly();
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                appProcess.destroyForcibly();
-            }
-            appProcess = null;
-        }
+        stopAppProcessOnly();
         if (composeStarted && composeDirectory != null) {
             boolean rmVol = "true".equalsIgnoreCase(System.getProperty("e2e.compose.down.removeVolumes", "false"));
             if (dockerComposePluginAvailable()) {
@@ -446,6 +455,24 @@ public final class E2eInfraLifecycle {
                 }
             }
             composeStarted = false;
+        }
+    }
+
+    private static void stopAppProcessOnly() {
+        if (appProcess == null) {
+            return;
+        }
+        log.info("Stopping DocuRAG process");
+        appProcess.destroy();
+        try {
+            if (!appProcess.waitFor(30, TimeUnit.SECONDS)) {
+                appProcess.destroyForcibly();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            appProcess.destroyForcibly();
+        } finally {
+            appProcess = null;
         }
     }
 }

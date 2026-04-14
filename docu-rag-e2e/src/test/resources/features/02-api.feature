@@ -29,3 +29,13 @@ Feature: DocuRAG REST API
     And I fetch latest evaluation with a valid id
     When I open the dashboard page
     Then the dashboard HTML contains "Dashboard"
+
+  @api
+  Scenario: API contract validation for required fields
+    Given actuator health is UP
+    When I POST RAG ask without question
+    Then the last API response status is 400
+    And the last API response is problem detail
+    When I run evaluation without dataset name
+    Then the last API response status is 400
+    And the last API response is problem detail

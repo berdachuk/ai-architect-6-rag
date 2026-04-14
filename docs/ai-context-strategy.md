@@ -51,7 +51,7 @@ Update existing skills when:
 
 ## Keeping Context In Sync
 
-- If the REST API changes: update `docu-rag/docs/openapi.yaml`, and ensure E2E regeneration still works (`docu-rag-e2e`).
+- If the REST API changes: update `docu-rag/api/openapi.yaml`, and ensure E2E regeneration still works (`docu-rag-e2e`).
 - If DB schema changes: add a Flyway migration and update any docs that describe schema/flows.
 - If module boundaries change: update `package-info.java` and the `core-architecture` skill.
 

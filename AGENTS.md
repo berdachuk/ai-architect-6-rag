@@ -23,7 +23,7 @@ Repo purpose: **DocuRAG** is a medical-document Retrieval Augmented Generation (
 DocuRAG is a **Modulith modular monolith** (module boundaries via `package-info.java`). Public surfaces:
 
 - Web UI: Thymeleaf pages (`/`, `/qa`, `/documents`, `/evaluation`)
-- REST API: `/api/**` (source of truth: `docu-rag/docs/openapi.yaml`)
+- REST API: `/api/**` (source of truth: `docu-rag/api/openapi.yaml`)
 
 Conceptual flow: **documents → chunking → vector → retrieval → llm**, with **evaluation/extraction/visualization** as sidecar capabilities and **web** as the edge.
 
@@ -46,7 +46,7 @@ mkdocs build -s
 ## Global Boundaries
 
 - ✅ OK: add/modify Modulith modules, REST endpoints, ingestion, chunking, retrieval, evaluation, docs.
-- ⚠️ Must update OpenAPI: any change to `/api/**` controllers or DTOs must also update `docu-rag/docs/openapi.yaml` (E2E client depends on it).
+- ⚠️ Must update OpenAPI: any change to `/api/**` controllers or DTOs must also update `docu-rag/api/openapi.yaml` (E2E client depends on it).
 - ⚠️ DB changes: schema changes must be versioned Flyway migrations (`docu-rag/src/main/resources/db/migration`).
 - 🚫 Do not introduce JPA/Hibernate (JDBC only).
 - 🚫 Do not call a live LLM/embedding provider from automated tests (use `TestAIConfig` via `test`/`e2e` profiles).
