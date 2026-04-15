@@ -3,6 +3,7 @@ package com.berdachuk.docurag.evaluation.internal;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
+import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -11,6 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Repository
+@RequiredArgsConstructor
 public class EvaluationJdbcRepository {
 
     private static final RowMapper<RunRow> RUN_ROW_MAPPER = (rs, rowNum) -> new RunRow(
@@ -26,10 +28,6 @@ public class EvaluationJdbcRepository {
     );
 
     private final NamedParameterJdbcTemplate jdbc;
-
-    public EvaluationJdbcRepository(NamedParameterJdbcTemplate jdbc) {
-        this.jdbc = jdbc;
-    }
 
     public Optional<String> findDatasetIdByName(String name) {
         List<String> ids = jdbc.queryForList(

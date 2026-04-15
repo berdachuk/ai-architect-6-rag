@@ -17,7 +17,7 @@ mkdocs build -s
 
 ## Doc Consistency Rules
 
-- If `/api/**` changes in code, ensure `docu-rag/docs/openapi.yaml` stays aligned (E2E depends on it).
+- If `/api/**` changes in code, ensure `docu-rag/api/openapi.yaml` stays aligned (E2E depends on it).
 - If profiles/ports change:
   - `local` defaults to `8080`
   - `e2e` defaults to `18080` (stub AI)

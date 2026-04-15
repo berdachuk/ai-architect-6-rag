@@ -8,6 +8,7 @@ import com.berdachuk.docurag.extraction.api.CategoryCount;
 import com.berdachuk.docurag.extraction.api.DocumentAnalysisApi;
 import com.berdachuk.docurag.extraction.api.GraphEdge;
 import com.berdachuk.docurag.extraction.api.GraphNode;
+import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
+@RequiredArgsConstructor
 public class DocumentAnalysisServiceImpl implements DocumentAnalysisApi {
 
     private static final String PROMPT = """
@@ -29,12 +31,6 @@ public class DocumentAnalysisServiceImpl implements DocumentAnalysisApi {
     private final NamedParameterJdbcTemplate jdbc;
     private final ChatClient chatClient;
     private final ObjectMapper objectMapper;
-
-    public DocumentAnalysisServiceImpl(NamedParameterJdbcTemplate jdbc, ChatClient chatClient, ObjectMapper objectMapper) {
-        this.jdbc = jdbc;
-        this.chatClient = chatClient;
-        this.objectMapper = objectMapper;
-    }
 
     @Override
     public AnalysisResponse analyze(AnalysisRequest request) {

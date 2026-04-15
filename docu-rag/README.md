@@ -60,7 +60,7 @@ Ports:
 | Visualization | `GET /api/visualizations/categories/pie`, `GET /api/visualizations/entities/graph`                                    |
 | Evaluation    | `POST /api/evaluation/run`, `GET /api/evaluation/runs`, `GET /api/evaluation/runs/{id}`, `GET /api/evaluation/latest` |
 
-**OpenAPI:** machine-readable contract for the REST surface lives in [`docs/openapi.yaml`](docs/openapi.yaml). The sibling module [`../docu-rag-e2e`](../docu-rag-e2e) generates a Java client from that file (`mvn generate-test-sources` in `docu-rag-e2e`). Update the YAML when controllers or DTOs change, then regenerate.
+**OpenAPI:** machine-readable contract for the REST surface lives in [`api/openapi.yaml`](api/openapi.yaml). This module generates Spring server interfaces/models from the contract during `generate-sources`, and the sibling module [`../docu-rag-e2e`](../docu-rag-e2e) generates a Java client from the same file (`mvn generate-test-sources` in `docu-rag-e2e`). Update the YAML first, then regenerate and adapt controller mappings.
 
 ## Evaluation CLI (no web port)
 

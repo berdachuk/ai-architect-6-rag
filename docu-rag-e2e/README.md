@@ -111,7 +111,7 @@ mvn verify -Dcucumber.filter.tags=@smoke
 
 ## OpenAPI client
 
-- Spec: [`../docu-rag/docs/openapi.yaml`](../docu-rag/docs/openapi.yaml)
+- Spec: [`../docu-rag/api/openapi.yaml`](../docu-rag/api/openapi.yaml)
 - Regenerate: `mvn generate-test-sources` or `mvn test-compile`
 - Packages: `com.berdachuk.docurag.e2e.client.*`
 

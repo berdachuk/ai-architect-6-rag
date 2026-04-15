@@ -8,6 +8,7 @@ import com.berdachuk.docurag.llm.api.RagAskResponse;
 import com.berdachuk.docurag.llm.api.RetrievedChunkDto;
 import com.berdachuk.docurag.retrieval.api.ChunkHit;
 import com.berdachuk.docurag.retrieval.api.SemanticSearchApi;
+import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class RagAskServiceImpl implements RagAskApi {
 
     private static final String SYSTEM = """
@@ -27,18 +29,6 @@ public class RagAskServiceImpl implements RagAskApi {
     private final SemanticSearchApi semanticSearchApi;
     private final DocuRagProperties docuRagProperties;
     private final CustomChatProperties chatProperties;
-
-    public RagAskServiceImpl(
-            ChatClient chatClient,
-            SemanticSearchApi semanticSearchApi,
-            DocuRagProperties docuRagProperties,
-            CustomChatProperties chatProperties
-    ) {
-        this.chatClient = chatClient;
-        this.semanticSearchApi = semanticSearchApi;
-        this.docuRagProperties = docuRagProperties;
-        this.chatProperties = chatProperties;
-    }
 
     @Override
     public RagAskResponse ask(RagAskRequest request) {

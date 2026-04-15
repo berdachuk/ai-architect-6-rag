@@ -2,6 +2,7 @@ package com.berdachuk.docurag.evaluation.internal;
 
 import com.berdachuk.docurag.evaluation.api.EvaluationApi;
 import com.berdachuk.docurag.evaluation.api.EvaluationRunRequest;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
@@ -18,17 +19,13 @@ import java.util.Optional;
 @Component
 @Profile("eval-cli")
 @Order(Integer.MAX_VALUE)
+@RequiredArgsConstructor
 public class EvalCliRunner implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(EvalCliRunner.class);
 
     private final EvaluationApi evaluationApi;
     private final ConfigurableApplicationContext context;
-
-    public EvalCliRunner(EvaluationApi evaluationApi, ConfigurableApplicationContext context) {
-        this.evaluationApi = evaluationApi;
-        this.context = context;
-    }
 
     @Override
     public void run(ApplicationArguments args) {

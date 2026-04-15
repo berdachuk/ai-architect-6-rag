@@ -57,6 +57,7 @@ public class CliSteps {
 
     @Then("the latest evaluation API returns a run id")
     public void latestEvalHasId() throws Exception {
+        E2eInfraLifecycle.ensureStarted();
         var latest = E2eWorld.clients().evaluation().getLatestEvaluation();
         assertThat(latest.getSummary()).isNotNull();
         assertThat(latest.getSummary().getId()).isNotBlank();

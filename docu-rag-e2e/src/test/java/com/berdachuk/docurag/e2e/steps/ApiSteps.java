@@ -20,6 +20,7 @@ import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import io.restassured.response.Response;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -37,6 +38,7 @@ public class ApiSteps {
     private RagAskResponse lastRagAsk;
     private AnalysisResponse lastAnalysis;
     private String ragHistoryId;
+    private Response lastApiResponse;
 
     public ApiSteps(TestContext testContext) {
         this.testContext = testContext;
@@ -286,5 +288,40 @@ public class ApiSteps {
                 .get("/api/rag/history/" + ragHistoryId)
                 .then()
                 .statusCode(expected);
+    }
+
+    @When("I POST RAG ask without question")
+    public void postRagAskWithoutQuestion() {
+        lastApiResponse = given()
+                .baseUri(E2eWorld.apiBaseUrl())
+                .contentType("application/json")
+                .body("{\"topK\":3,\"minScore\":0.0}")
+                .when()
+                .post("/api/rag/ask");
+    }
+
+    @When("I run evaluation without dataset name")
+    public void runEvaluationWithoutDatasetName() {
+        lastApiResponse = given()
+                .baseUri(E2eWorld.apiBaseUrl())
+                .contentType("application/json")
+                .body("{\"topK\":3,\"minScore\":0.0,\"semanticPassThreshold\":0.5}")
+                .when()
+                .post("/api/evaluation/run");
+    }
+
+    @Then("the last API response status is {int}")
+    public void lastApiResponseStatusIs(int expectedStatus) {
+        assertThat(lastApiResponse).isNotNull();
+        assertThat(lastApiResponse.statusCode()).isEqualTo(expectedStatus);
+    }
+
+    @Then("the last API response is problem detail")
+    public void lastApiResponseIsProblemDetail() {
+        assertThat(lastApiResponse).isNotNull();
+        assertThat(lastApiResponse.contentType()).contains("application/problem+json");
+        assertThat(lastApiResponse.jsonPath().getString("title")).isNotBlank();
+        assertThat(lastApiResponse.jsonPath().getString("detail")).isNotBlank();
+        assertThat(lastApiResponse.jsonPath().getInt("status")).isGreaterThanOrEqualTo(400);
     }
 }

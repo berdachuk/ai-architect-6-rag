@@ -2,57 +2,82 @@ package com.berdachuk.docurag.web.rest;
 
 import com.berdachuk.docurag.documents.api.DocumentCatalogApi;
 import com.berdachuk.docurag.documents.api.DocumentIngestApi;
-import com.berdachuk.docurag.documents.api.IngestSummary;
-import com.berdachuk.docurag.documents.api.SourceDocumentDetail;
-import com.berdachuk.docurag.documents.api.SourceDocumentSummary;
+import com.berdachuk.docurag.web.openapi.api.DocumentsApi;
+import com.berdachuk.docurag.web.openapi.model.IngestPathsRequest;
+import com.berdachuk.docurag.web.openapi.model.IngestSummary;
+import com.berdachuk.docurag.web.openapi.model.SourceDocumentDetail;
+import com.berdachuk.docurag.web.openapi.model.SourceDocumentSummary;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/documents")
-public class DocumentsRestController {
+@RequiredArgsConstructor
+public class DocumentsRestController implements DocumentsApi {
 
     private final DocumentIngestApi documentIngestApi;
     private final DocumentCatalogApi documentCatalogApi;
 
-    public DocumentsRestController(DocumentIngestApi documentIngestApi, DocumentCatalogApi documentCatalogApi) {
-        this.documentIngestApi = documentIngestApi;
-        this.documentCatalogApi = documentCatalogApi;
-    }
-
-    @PostMapping("/ingest")
-    public ResponseEntity<IngestSummary> ingest(@RequestBody(required = false) IngestPathsRequest body) {
-        IngestSummary summary = body != null && body.paths() != null && !body.paths().isEmpty()
-                ? documentIngestApi.ingestPaths(body.paths())
+    @Override
+    public ResponseEntity<IngestSummary> ingestDocuments(IngestPathsRequest body) {
+        com.berdachuk.docurag.documents.api.IngestSummary summary = body != null && body.getPaths() != null && !body.getPaths().isEmpty()
+                ? documentIngestApi.ingestPaths(body.getPaths())
                 : documentIngestApi.ingestConfiguredPaths();
-        return ResponseEntity.ok(summary);
+        return ResponseEntity.ok(toOpenApi(summary));
     }
 
-    @GetMapping
-    public List<SourceDocumentSummary> list(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
-    ) {
-        return documentCatalogApi.listDocuments(page, size);
+    @Override
+    public ResponseEntity<List<SourceDocumentSummary>> listDocuments(Integer page, Integer size) {
+        int safePage = page == null ? 0 : page;
+        int safeSize = size == null ? 20 : size;
+        List<SourceDocumentSummary> payload = documentCatalogApi.listDocuments(safePage, safeSize).stream()
+                .map(this::toOpenApi)
+                .toList();
+        return ResponseEntity.ok(payload);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<SourceDocumentDetail> get(@PathVariable String id) {
+    @Override
+    public ResponseEntity<SourceDocumentDetail> getDocumentById(String id) {
         return documentCatalogApi.getDocument(id)
+                .map(this::toOpenApi)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/categories")
-    public List<String> categories() {
-        return documentCatalogApi.listCategories();
+    @Override
+    public ResponseEntity<List<String>> listDocumentCategories() {
+        return ResponseEntity.ok(documentCatalogApi.listCategories());
+    }
+
+    private IngestSummary toOpenApi(com.berdachuk.docurag.documents.api.IngestSummary summary) {
+        return new IngestSummary()
+                .jobId(summary.jobId())
+                .documentsLoaded(summary.documentsLoaded())
+                .documentsSkipped(summary.documentsSkipped())
+                .status(summary.status())
+                .errorMessage(summary.errorMessage());
+    }
+
+    private SourceDocumentSummary toOpenApi(com.berdachuk.docurag.documents.api.SourceDocumentSummary summary) {
+        return new SourceDocumentSummary()
+                .id(summary.id())
+                .externalId(summary.externalId())
+                .title(summary.title())
+                .category(summary.category())
+                .sourceFormat(summary.sourceFormat());
+    }
+
+    private SourceDocumentDetail toOpenApi(com.berdachuk.docurag.documents.api.SourceDocumentDetail detail) {
+        return new SourceDocumentDetail()
+                .id(detail.id())
+                .externalId(detail.externalId())
+                .title(detail.title())
+                .category(detail.category())
+                .sourceName(detail.sourceName())
+                .sourceUrl(detail.sourceUrl())
+                .content(detail.content())
+                .sourceFormat(detail.sourceFormat());
     }
 }

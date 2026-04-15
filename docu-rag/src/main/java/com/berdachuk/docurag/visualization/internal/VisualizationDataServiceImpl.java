@@ -6,6 +6,7 @@ import com.berdachuk.docurag.extraction.api.DocumentAnalysisApi;
 import com.berdachuk.docurag.visualization.api.GraphVisualizationResponse;
 import com.berdachuk.docurag.visualization.api.PieChartResponse;
 import com.berdachuk.docurag.visualization.api.VisualizationDataApi;
+import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -14,15 +15,11 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@RequiredArgsConstructor
 public class VisualizationDataServiceImpl implements VisualizationDataApi {
 
     private final NamedParameterJdbcTemplate jdbc;
     private final DocumentAnalysisApi documentAnalysisApi;
-
-    public VisualizationDataServiceImpl(NamedParameterJdbcTemplate jdbc, DocumentAnalysisApi documentAnalysisApi) {
-        this.jdbc = jdbc;
-        this.documentAnalysisApi = documentAnalysisApi;
-    }
 
     @Override
     public PieChartResponse categoriesPie() {

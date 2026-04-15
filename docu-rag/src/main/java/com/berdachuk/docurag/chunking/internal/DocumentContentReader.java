@@ -1,5 +1,6 @@
 package com.berdachuk.docurag.chunking.internal;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -8,13 +9,10 @@ import java.util.Map;
 import java.util.Optional;
 
 @Component
+@RequiredArgsConstructor
 public class DocumentContentReader {
 
     private final NamedParameterJdbcTemplate jdbc;
-
-    public DocumentContentReader(NamedParameterJdbcTemplate jdbc) {
-        this.jdbc = jdbc;
-    }
 
     public Optional<DocumentRow> find(String documentId) {
         List<DocumentRow> rows = jdbc.query(
@@ -29,6 +27,5 @@ public class DocumentContentReader {
         return rows.stream().findFirst();
     }
 
-    public record DocumentRow(String id, String content, String category) {
-    }
+    public record DocumentRow(String id, String content, String category) {}
 }

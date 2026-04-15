@@ -156,13 +156,13 @@ flowchart TB
 | `core` | `...docurag.core` | DataSource/JDBC config, **`DocuRagAiConfiguration`**, **`IdGenerator`**, shared exceptions; often **OPEN** |
 | `documents` | `...docurag.documents` | Corpus ingest (**structured + PDF**), `source_document`, **PDFBox** (or equivalent) |
 | `chunking` | `...docurag.chunking` | Chunking policy + chunk rows |
-| `vector` | `...docurag.vector` | **`EmbeddingModel`** calls, pgvector writes |
+| `vector` | `...docurag.vector` | **`EmbeddingModel`** calls, pgvector writes; **`IndexingProgressApi`** (`.api`) exposes indexing progress to `web` |
 | `retrieval` | `...docurag.retrieval` | Similarity search, **no** generative LLM |
 | `llm` | `...docurag.llm` | **`ChatClient`**, advisors, RAG assembly |
 | `extraction` | `...docurag.extraction` | Structured extraction for viz |
 | `visualization` | `...docurag.visualization` | Chart/graph DTOs |
 | `evaluation` | `...docurag.evaluation` | Eval runs, scoring, persistence |
-| `web` | `...docurag.web` | REST + Thymeleaf; **OPEN** or wide deps |
+| `web` | `...docurag.web` | REST + Thymeleaf; **`DocumentIngestOrchestrator`** coordinates async ingest + indexing pipeline; **OPEN** or wide deps |
 
 ### 5.2 Declared dependency DAG (initial)
 
@@ -224,7 +224,7 @@ flowchart BT
 
 ### 6.1 Ingestion and indexing
 
-`documents` → `chunking` → `vector`: normalize rows, dedupe by `external_id`/hash, assign **`IdGenerator`** ids, split chunks, batch **embed**, upsert **`document_chunk.embedding`**.
+`web` (`DocumentIngestOrchestrator`) → `documents` → `chunking` → `vector`: `Orchestrator` starts async task, tracks progress via **`IndexingProgressApi`**, normalizes rows, dedupes by `external_id`/hash, assigns **`IdGenerator`** ids, splits chunks, batch **embed**, upserts **`document_chunk.embedding`**.
 
 ### 6.2 Question answering
 
@@ -310,7 +310,15 @@ erDiagram
 | Viz | `GET .../visualizations/categories/pie`, `.../entities/graph` |
 | Evaluation | `POST .../evaluation/run`, `GET .../runs`, `.../runs/{id}`, `.../latest` |
 
-### 9.2 Presentation (Thymeleaf)
+### 9.2 API-first contract implementation
+
+- `docu-rag/api/openapi.yaml` is the canonical REST contract for `/api/**`.
+- App build generates Spring server interfaces/models into `target/generated-sources/openapi`.
+- `web.rest` controllers implement generated interfaces from `com.berdachuk.docurag.web.openapi.api` and map to internal module APIs (`*.api` records).
+- Request validation follows OpenAPI-required fields and produces RFC7807-style problem responses for invalid payloads.
+- `docu-rag-e2e` generates its client from the same `openapi.yaml`, keeping provider/consumer in lockstep.
+
+### 9.3 Presentation (Thymeleaf)
 
 | Path | Purpose |
 |------|---------|

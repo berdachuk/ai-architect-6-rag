@@ -11,7 +11,7 @@ Purpose: **black-box verification** of DocuRAG via **Cucumber** (API + CLI) and 
 
 ## Dependencies / Contracts
 
-- REST contract source of truth: `../docu-rag/docs/openapi.yaml`
+- REST contract source of truth: `../docu-rag/api/openapi.yaml`
   - If controllers/DTOs change, update the YAML and regenerate by running `mvn generate-test-sources` (or `mvn verify`).
 - App under test: `../docu-rag/target/docu-rag-0.1.0-SNAPSHOT.jar`
 - Runtime profile: app is started with `--spring.profiles.active=e2e` (stub AI via `TestAIConfig`).

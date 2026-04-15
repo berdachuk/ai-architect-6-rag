@@ -154,7 +154,7 @@
                         </goals>
                         <phase>generate-test-sources</phase>
                         <configuration>
-                            <inputSpec>${project.basedir}/../docu-rag/docs/openapi.yaml</inputSpec>
+                            <inputSpec>${project.basedir}/../docu-rag/api/openapi.yaml</inputSpec>
                             <generatorName>java</generatorName>
                             <library>okhttp-gson</library>
                             <output>${project.build.directory}/generated-sources/openapi</output>

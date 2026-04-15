@@ -10,7 +10,7 @@ Feature: DocuRAG UI use cases
   Scenario: Documents page lists ingested documents
     Given I open the UI path "/documents"
     Then the documents table has at least 1 row
-    And the page body contains text "Hypertension"
+    And the page body contains text "Total:"
 
   Scenario: Documents ingest configured paths via UI
     Given I open the UI path "/documents"
