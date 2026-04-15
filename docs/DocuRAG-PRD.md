@@ -145,7 +145,7 @@ The **primary** corpus for scalable indexing, retrieval quality, and evaluation 
 
 **Repository layout (documentation + optional files)**
 
-- Maintain **`docu-rag/data/pdf-demo/README.md`** (or equivalent under the application module) listing **intended sources**, **direct URLs**, and **license / attribution** notes. Operators download PDFs locally if binaries are not committed (to keep the repo small).
+- Maintain **`data/pdf-demo/README.md`** (or equivalent under the application module) listing **intended sources**, **direct URLs**, and **license / attribution** notes. Operators download PDFs locally if binaries are not committed (to keep the repo small).
 - Optional: commit **1–2 small** PDF fixtures **only** if licenses explicitly allow redistribution; otherwise use **Testcontainers / test resources** with **tiny synthetic or minimal PDF bytes** for automated tests.
 
 **README wording (course / demo)**
@@ -838,7 +838,7 @@ Target delivery aligns with the program window **Apr 2–Apr 17, 2026** (RAG Cre
 - Source code repository structured as a **Spring Modulith** modular monolith (`package-info.java` per module, **`*.api`** for cross-module use, architecture tests passing).
 - **Testcontainers**-based **full-flow** integration test(s) with **mocked `ChatModel` / `ChatClient`** (and **mocked `EmbeddingModel`** for deterministic CI), documented in README.
 - `PRD.md` (this document or project-local copy as required by the Run owner).
-- README with setup and demo instructions, **explicit link(s) to dataset(s)** on Hugging Face or other hosts, **description of the supplementary PDF demo pack** (open English medical PDFs + `docu-rag/data/pdf-demo/README.md`), and **how to run evaluation** plus how to read the metric(s).
+- README with setup and demo instructions, **explicit link(s) to dataset(s)** on Hugging Face or other hosts, **description of the supplementary PDF demo pack** (open English medical PDFs + `data/pdf-demo/README.md`), and **how to run evaluation** plus how to read the metric(s).
 - Flyway migrations.
 - Docker Compose for PostgreSQL + pgvector.
 - Example corpus subset manifest.

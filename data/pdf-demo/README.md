@@ -37,16 +37,16 @@ Record each addition in the manifest section below.
 ## Local layout
 
 1. Download PDFs you are allowed to use for your demo.
-2. Recommended local folder: `docu-rag/data/pdf-demo/downloaded/` (PDF binaries are gitignored).
+   2. Recommended local folder: `data/pdf-demo/downloaded/` (PDF binaries are gitignored).
 3. Point the app at the folder:
    - Env: `DOCURAG_PDF_DEMO_PATH=<absolute-path-to-downloaded>`
    - Or local profile config: `docurag.ingestion.pdf-demo-path` in `application-local.yml` (created from `application-local.example.yml`)
 4. Run ingestion per application README (FR-1), or call the API explicitly:
 
 ```bash
-curl -s -X POST http://localhost:8080/api/documents/ingest \
+curl -s -X POST http://localhost:8084/api/documents/ingest \
   -H "Content-Type: application/json" \
-  -d '{"paths":["/absolute/path/to/docu-rag/data/pdf-demo/downloaded"]}'
+   -d '{"paths":["/absolute/path/to/data/pdf-demo/downloaded"]}'
 ```
 
 **Git:** Large binaries are often **not** committed. This repository may keep **only** this README and, if needed, **tiny** PDF fixtures under `src/test/resources` for automated tests.

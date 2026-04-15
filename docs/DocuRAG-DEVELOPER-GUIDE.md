@@ -177,7 +177,7 @@ cd docu-rag
 java -jar target/docu-rag-0.1.0-SNAPSHOT.jar --spring.profiles.active=local
 ```
 
-Default HTTP port: **8080**.
+Default HTTP port: **8084**.
 
 Tip: if you want to run without a live Ollama/LLM, start with profile **`e2e`** instead (it uses stub AI beans and port **18080**):
 
@@ -189,12 +189,12 @@ mvn spring-boot:run -Dspring-boot.run.profiles=e2e
 
 ## 4. Manual testing (happy path)
 
-Use the **Thymeleaf UI** at `http://localhost:8080/` or the REST API (OpenAPI: [`docu-rag/api/openapi.yaml`](https://github.com/berdachuk/ai-architect-6-rag/blob/main/docu-rag/api/openapi.yaml)).
+Use the **Thymeleaf UI** at `http://localhost:8084/` or the REST API (OpenAPI: [`docu-rag/api/openapi.yaml`](https://github.com/berdachuk/ai-architect-6-rag/blob/main/docu-rag/api/openapi.yaml)).
 
 ### 4.1 Health
 
 ```bash
-curl -s http://localhost:8080/actuator/health | jq .
+curl -s http://localhost:8084/actuator/health | jq .
 ```
 
 Expect top-level `"status":"UP"` and DB/vector components healthy after Flyway has run.
@@ -211,43 +211,43 @@ export DOCURAG_PDF_DEMO_PATH=/path/to/pdf-folder
 Restart the app if you changed env vars, or call the API with explicit paths:
 
 ```bash
-curl -s -X POST http://localhost:8080/api/documents/ingest \
+curl -s -X POST http://localhost:8084/api/documents/ingest \
   -H "Content-Type: application/json" \
   -d '{"paths":["/absolute/path/to/sample.jsonl"]}'
 ```
 
-Subset policy example: [`docu-rag/data/corpus/README.md`](https://github.com/berdachuk/ai-architect-6-rag/blob/main/docu-rag/data/corpus/README.md).
+Subset policy example: [`data/corpus/README.md`](https://github.com/berdachuk/ai-architect-6-rag/blob/main/data/corpus/README.md).
 
 #### PDF demo (local-only binaries)
 
 This repo treats PDF binaries as **local-only** (gitignored). A suggested folder is:
 
-- `docu-rag/data/pdf-demo/downloaded/`
+- `data/pdf-demo/downloaded/`
 
 Ingest PDFs by passing the folder path:
 
 ```bash
-curl -s -X POST http://localhost:8080/api/documents/ingest \
+curl -s -X POST http://localhost:8084/api/documents/ingest \
   -H "Content-Type: application/json" \
-  -d '{"paths":["/absolute/path/to/docu-rag/data/pdf-demo/downloaded"]}' | jq .
+  -d '{"paths":["/absolute/path/to/data/pdf-demo/downloaded"]}' | jq .
 ```
 
 Verify the PDF documents exist (look for `"sourceFormat":"pdf"`):
 
 ```bash
-curl -s "http://localhost:8080/api/documents?page=25&size=20" | jq .
+curl -s "http://localhost:8084/api/documents?page=25&size=20" | jq .
 ```
 
 ### 4.3 Build the vector index
 
 ```bash
-curl -s -X POST http://localhost:8080/api/index/rebuild
+curl -s -X POST http://localhost:8084/api/index/rebuild
 ```
 
 ### 4.4 Index status
 
 ```bash
-curl -s http://localhost:8080/api/index/status | jq .
+curl -s http://localhost:8084/api/index/status | jq .
 ```
 
 Confirm non-zero document/chunk/embedded counts when indexing finished.
@@ -255,7 +255,7 @@ Confirm non-zero document/chunk/embedded counts when indexing finished.
 ### 4.5 RAG question (REST)
 
 ```bash
-curl -s -X POST http://localhost:8080/api/rag/ask \
+curl -s -X POST http://localhost:8084/api/rag/ask \
   -H "Content-Type: application/json" \
   -d '{"question":"What is hypertension?","topK":5,"minScore":0.3}' | jq .
 ```
@@ -277,7 +277,7 @@ Medical **disclaimer** should appear on interactive pages (NFR).
 Dataset name is seeded (e.g. `medical-rag-eval-v1`):
 
 ```bash
-curl -s -X POST http://localhost:8080/api/evaluation/run \
+curl -s -X POST http://localhost:8084/api/evaluation/run \
   -H "Content-Type: application/json" \
   -d '{"datasetName":"medical-rag-eval-v1","topK":3,"minScore":0.0,"semanticPassThreshold":0.5}' | jq .
 ```
@@ -315,7 +315,7 @@ Use `docker compose down -v` only when you want a **wiped** database volume.
 | App cannot connect to DB | `docker compose ps`; JDBC uses **`localhost:5433`** for Compose mapping. |
 | Flyway / “Unsupported Database: PostgreSQL” | Use Boot Flyway starter + `flyway-database-postgresql` (see [`docu-rag/README.md`](https://github.com/berdachuk/ai-architect-6-rag/blob/main/docu-rag/README.md)). |
 | Embeddings/chat fail | `CHAT_BASE_URL` / `EMBEDDING_BASE_URL` end with **`/v1`** for Ollama-style servers; models pulled in Ollama. |
-| Port 8080 in use | `--server.port=8081` on the command line or `SERVER_PORT` env. |
+| Port 8084 in use | `--server.port=8081` on the command line or `SERVER_PORT` env. |
 
 ---
 

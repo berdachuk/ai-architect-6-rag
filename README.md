@@ -157,7 +157,7 @@ cd docu-rag
 mvn -q spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
-Then open `http://localhost:8080/`.
+Then open `http://localhost:8084/`.
 
 For local AI-backed execution, configure environment variables such as:
 
@@ -172,8 +172,8 @@ For local AI-backed execution, configure environment variables such as:
 ## Data and evaluation
 
 - Primary dataset: [Sagarika-Singh-99/medical-rag-corpus](https://huggingface.co/datasets/Sagarika-Singh-99/medical-rag-corpus)
-- PDF demo data guidance: [`docu-rag/data/pdf-demo/README.md`](docu-rag/data/pdf-demo/README.md)
-- Corpus subset guidance: [`docu-rag/data/corpus/README.md`](docu-rag/data/corpus/README.md)
+- PDF demo data guidance: [`data/pdf-demo/README.md`](data/pdf-demo/README.md)
+- Corpus subset guidance: [`data/corpus/README.md`](data/corpus/README.md)
 - Product spec: [`docs/DocuRAG-PRD.md`](docs/DocuRAG-PRD.md)
 
 ## Relevant learning materials from the task

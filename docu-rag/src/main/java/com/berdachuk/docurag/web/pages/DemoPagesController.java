@@ -259,9 +259,7 @@ public class DemoPagesController {
     private String resolveDefaultIngestPath() {
         List<Path> candidates = List.of(
                 Path.of("data/corpus/_sample"),
-                Path.of("docu-rag/data/corpus/_sample"),
-                Path.of("data/pdf-demo/downloaded"),
-                Path.of("docu-rag/data/pdf-demo/downloaded")
+                Path.of("data/pdf-demo/downloaded")
         );
         for (Path candidate : candidates) {
             Path absolute = candidate.toAbsolutePath().normalize();

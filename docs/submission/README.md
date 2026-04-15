@@ -20,8 +20,8 @@ Use this list with [DocuRAG-PRD.md](../DocuRAG-PRD.md) deliverables and [DocuRAG
 ## Documentation links (for reviewers)
 
 - **Primary corpus (HF):** [Sagarika-Singh-99/medical-rag-corpus](https://huggingface.co/datasets/Sagarika-Singh-99/medical-rag-corpus) — also in [docu-rag/README.md](https://github.com/berdachuk/ai-architect-6-rag/blob/main/docu-rag/README.md).
-- **Subset manifest example:** [docu-rag/data/corpus/subset-manifest.example.json](https://github.com/berdachuk/ai-architect-6-rag/blob/main/docu-rag/data/corpus/subset-manifest.example.json).
-- **PDF demo pack:** [docu-rag/data/pdf-demo/README.md](https://github.com/berdachuk/ai-architect-6-rag/blob/main/docu-rag/data/pdf-demo/README.md).
+- **Subset manifest example:** [data/corpus/subset-manifest.example.json](https://github.com/berdachuk/ai-architect-6-rag/blob/main/data/corpus/subset-manifest.example.json).
+- **PDF demo pack:** [data/pdf-demo/README.md](https://github.com/berdachuk/ai-architect-6-rag/blob/main/data/pdf-demo/README.md).
 - **Evaluation:** seeded dataset `medical-rag-eval-v1`; REST `POST /api/evaluation/run`, UI `/evaluation`, CLI `eval-cli` profile (see [docu-rag/README.md](https://github.com/berdachuk/ai-architect-6-rag/blob/main/docu-rag/README.md)).
 
 ## CI

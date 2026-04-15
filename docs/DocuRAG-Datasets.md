@@ -1,7 +1,7 @@
 # Datasets for DocuRAG
 
 **Normative requirements:** [DocuRAG-PRD.md](DocuRAG-PRD.md) (Dataset Strategy, FR-1).  
-**PDF demo pack (paths, manifest template):** [docu-rag/data/pdf-demo/README.md](https://github.com/berdachuk/ai-architect-6-rag/blob/main/docu-rag/data/pdf-demo/README.md).
+**PDF demo pack (paths, manifest template):** [data/pdf-demo/README.md](https://github.com/berdachuk/ai-architect-6-rag/blob/main/data/pdf-demo/README.md).
 
 This document expands **what to download**, **why**, and **suggested local layout**. It does not replace the PRD for acceptance criteria.
 
@@ -39,7 +39,7 @@ This is the **main** corpus for DocuRAG. It is an English medical RAG-oriented r
 
 ### How it should be used
 
-Do **not** index the full corpus in the first iteration. Ingest a **curated subset** of roughly **2,000–5,000** documents from **3–5** categories so that indexing and evaluation stay practical locally. Persist a **subset manifest** in the repository (see PRD Dataset Strategy). **Repository example:** [docu-rag/data/corpus/subset-manifest.example.json](https://github.com/berdachuk/ai-architect-6-rag/blob/main/docu-rag/data/corpus/subset-manifest.example.json) and [docu-rag/data/corpus/README.md](https://github.com/berdachuk/ai-architect-6-rag/blob/main/docu-rag/data/corpus/README.md).
+Do **not** index the full corpus in the first iteration. Ingest a **curated subset** of roughly **2,000–5,000** documents from **3–5** categories so that indexing and evaluation stay practical locally. Persist a **subset manifest** in the repository (see PRD Dataset Strategy). **Repository example:** [data/corpus/subset-manifest.example.json](https://github.com/berdachuk/ai-architect-6-rag/blob/main/data/corpus/subset-manifest.example.json) and [data/corpus/README.md](https://github.com/berdachuk/ai-architect-6-rag/blob/main/data/corpus/README.md).
 
 ### Recommended subset fields (typical)
 
@@ -57,7 +57,7 @@ The actual export format (JSONL, Parquet, etc.) follows the Hugging Face dataset
 
 ## Supplementary raw PDF demo set
 
-The primary corpus is **not** a pack of arbitrary PDF files. To satisfy **PDF ingestion** (PRD FR-1, [docu-rag/data/pdf-demo/README.md](https://github.com/berdachuk/ai-architect-6-rag/blob/main/docu-rag/data/pdf-demo/README.md)), maintain a **small** set of **open English** PDFs from trustworthy publishers.
+The primary corpus is **not** a pack of arbitrary PDF files. To satisfy **PDF ingestion** (PRD FR-1, [data/pdf-demo/README.md](https://github.com/berdachuk/ai-architect-6-rag/blob/main/data/pdf-demo/README.md)), maintain a **small** set of **open English** PDFs from trustworthy publishers.
 
 ---
 
@@ -99,7 +99,7 @@ Five PDFs are enough to demonstrate ingestion end-to-end:
 | NHS dm+d implementation guide (Primary Care) | Implementation / prescribing terminology. |
 | NHS secondary care e-prescribing implementation guidance | Operational terminology and long-form prose. |
 
-**Local demo pack note:** in this repository we keep PDF binaries **local-only** (gitignored). Place downloaded files under `docu-rag/data/pdf-demo/downloaded/` and set `DOCURAG_PDF_DEMO_PATH` accordingly.
+**Local demo pack note:** in this repository we keep PDF binaries **local-only** (gitignored). Place downloaded files under `data/pdf-demo/downloaded/` and set `DOCURAG_PDF_DEMO_PATH` accordingly.
 
 ---
 
@@ -124,7 +124,7 @@ docu-rag/
 If the team prefers a repository-root `data/` tree instead, document one convention in README and keep paths consistent with local configuration
 (`application-local.yml` if you use one locally, or environment variables for `docurag.ingestion.*`).
 
-**Processed** and **eval** artifacts may live under `docu-rag/src/main/resources/eval/` or `docu-rag/data/processed/` per implementation; PRD requires a versioned eval dataset and corpus subset manifest somewhere discoverable.
+**Processed** and **eval** artifacts may live under `docu-rag/src/main/resources/eval/` or `data/processed/` per implementation; PRD requires a versioned eval dataset and corpus subset manifest somewhere discoverable.
 
 ---
 
