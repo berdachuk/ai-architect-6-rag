@@ -1,0 +1,22 @@
+{
+  "version": "1",
+  "dataset": "Sagarika-Singh-99/medical-rag-corpus",
+  "source_file": "_hf/final_corpus.pkl",
+  "export": {
+    "format": "jsonl",
+    "output": "_sample/medical-rag-corpus.sample.500.jsonl",
+    "rows_total": 3345,
+    "sampling": {
+      "seed": 42,
+      "by_category": {
+        "faq": 1000,
+        "summary": 1000,
+        "Symptoms_definition": 1000,
+        "Symptoms": 304,
+        "Precaution": 41,
+        "mcqa": 0
+      }
+    }
+  },
+  "notes": "Stratified subset excluding mcqa (193k rows). Top 1000 each of faq, summary, Symptoms_definition; all available Symptoms (304) and Precaution (41); capped at 5000 total. Total: 3345 rows."
+}
