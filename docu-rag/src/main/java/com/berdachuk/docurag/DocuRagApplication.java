@@ -59,9 +59,11 @@ public class DocuRagApplication {
             log.info("  Datasource: (not configured)");
         }
 
-        String webPort = env.getProperty("local.server.port", env.getProperty("server.port", "8080"));
+        String webPort = env.getProperty("local.server.port", env.getProperty("server.port", "8084"));
         log.info("  Local URL: http://localhost:{}", webPort);
         log.info("  Home page: http://localhost:{}/", webPort);
+        log.info("  API docs: http://localhost:{}/v3/api-docs", webPort);
+        log.info("  Swagger UI: http://localhost:{}/swagger-ui/index.html", webPort);
         log.info("========================================");
     }
 

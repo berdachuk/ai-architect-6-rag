@@ -13,29 +13,39 @@
         button { background: #1e3a5f; color: #fff; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
         .card { background: #fff; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
         input { padding: 0.35rem; margin-right: 0.5rem; }
+        .success { color: #065f46; background: #ecfdf5; border: 1px solid #10b981; border-radius: 6px; padding: 0.6rem 0.8rem; }
+        .info { color: #1e3a8a; background: #eff6ff; border: 1px solid #3b82f6; border-radius: 6px; padding: 0.6rem 0.8rem; }
+        tr.highlight { background: #fffbeb; }
     </style>
 </head>
 <body>
 <div th:replace="~{fragments/common :: nav}"></div>
-<div th:replace="~{fragments/disclaimer :: disclaimer}"></div>
 <main>
     <h1>Evaluation</h1>
     <div class="card">
         <h2>Run dataset</h2>
-        <form method="post" th:action="@{/evaluation/run}">
+        <form method="post" th:action="@{/evaluation/run}" id="evaluation-form">
             <label>Dataset name
                 <input type="text" name="datasetName" value="medical-rag-eval-v1" required/>
             </label><br/><br/>
-            <label>Top K <input type="number" name="topK" value="5"/></label>
-            <label>Min score <input type="number" step="0.05" name="minScore" value="0.5"/></label>
-            <label>Semantic pass ≥ <input type="number" step="0.05" name="semanticPassThreshold" value="0.8"/></label>
+            <label>Top K <input type="number" name="topK" min="1" value="5"/></label>
+            <label>Min score <input type="number" step="0.05" min="0" max="1" name="minScore" value="0.5"/></label>
+            <label>Semantic pass ≥ <input type="number" step="0.05" min="0" max="1" name="semanticPassThreshold" value="0.8"/></label>
             <br/><br/>
-            <button type="submit">Run evaluation</button>
+            <button type="submit" id="run-evaluation-btn">Run evaluation</button>
         </form>
+        <div id="evaluation-running" class="info" style="display:none; margin-top: 0.75rem;">
+            Running evaluation now. This can take some time, please wait...
+        </div>
+        <div th:if="${runError != null}">
+            <p style="color:#b91c1c;" th:text="${runError}"></p>
+        </div>
         <div th:if="${runResult != null}">
+            <p class="success">Evaluation completed. Run id: <code th:text="${runResult.runId()}"></code></p>
             <p>Run <code th:text="${runResult.runId()}"></code> — total <span th:text="${runResult.total()}"></span></p>
             <p>Normalized accuracy: <span th:text="${runResult.normalizedAccuracy()}"></span></p>
             <p>Mean semantic similarity: <span th:text="${runResult.meanSemanticSimilarity()}"></span></p>
+            <p>Semantic accuracy @<span th:text="${runResult.semanticPassThreshold()}"></span>: <span th:text="${runResult.semanticAccuracy()}"></span></p>
             <p>Semantic accuracy @0.80: <span th:text="${runResult.semanticAccuracyAt080()}"></span></p>
         </div>
     </div>
@@ -48,20 +58,37 @@
                 <th>Started</th>
                 <th>Norm. acc.</th>
                 <th>Mean sem.</th>
+                <th>Sem@th</th>
+                <th>Th</th>
                 <th>Sem@0.8</th>
             </tr>
             </thead>
             <tbody>
-            <tr th:each="r : ${runs}">
+            <tr th:each="r : ${runs}" th:classappend="${highlightRunId != null && highlightRunId.equals(r.id())} ? 'highlight'">
                 <td><code th:text="${r.id()}"></code></td>
                 <td th:text="${r.startedAt()}">—</td>
                 <td th:text="${r.normalizedAccuracy()}">—</td>
                 <td th:text="${r.meanSemanticSimilarity()}">—</td>
+                <td th:text="${r.semanticAccuracy()}">—</td>
+                <td th:text="${r.semanticPassThreshold()}">—</td>
                 <td th:text="${r.semanticAccuracyAt080()}">—</td>
             </tr>
             </tbody>
         </table>
     </div>
 </main>
+<script>
+    (function () {
+        var form = document.getElementById('evaluation-form');
+        var button = document.getElementById('run-evaluation-btn');
+        var running = document.getElementById('evaluation-running');
+        if (!form || !button || !running) return;
+        form.addEventListener('submit', function () {
+            button.disabled = true;
+            button.textContent = 'Running...';
+            running.style.display = 'block';
+        });
+    })();
+</script>
 </body>
 </html>

@@ -104,7 +104,19 @@ public class DocumentIngestApiImpl implements DocumentIngestApi {
             }
             return new int[]{loaded, skipped};
         }
-        List<StructuredFileParser.ParsedDocument> rows = structuredParser.parseFile(path);
+        if (!(name.endsWith(".jsonl") || name.endsWith(".json") || name.endsWith(".csv"))) {
+            log.info("Skipping unsupported file type during ingest: {}", path);
+            return new int[]{0, 1};
+        }
+        StructuredFileParser.ParsedFile parsedFile;
+        try {
+            parsedFile = structuredParser.parseFile(path);
+        } catch (IOException | RuntimeException e) {
+            log.warn("Skipping structured file due to parse/read failure: {} ({})", path, e.getMessage());
+            return new int[]{0, 1};
+        }
+        skipped += parsedFile.malformedRecordsSkipped();
+        List<StructuredFileParser.ParsedDocument> rows = parsedFile.documents();
         for (StructuredFileParser.ParsedDocument row : rows) {
             if (ingestStructuredRow(row, path, "structured")) {
                 loaded++;

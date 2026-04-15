@@ -65,7 +65,7 @@ mvn verify
 |----------|---------|---------|
 | `e2e.compose.dir` | `${project.basedir}/../docu-rag` | Directory containing `compose.yaml` |
 | `e2e.app.jar` | `../docu-rag/target/docu-rag-0.1.0-SNAPSHOT.jar` | Spring Boot repackaged JAR |
-| `e2e.app.port` | `18080` | `server.port` for the app under test (chosen to avoid common local collisions on `8080`) |
+| `e2e.app.port` | `18080` | `server.port` for the app under test (chosen to avoid common local collisions with local default `8084`) |
 | `e2e.pg.port` | `5433` | Host port for Postgres (Compose mapping) |
 | `e2e.compose.down.removeVolumes` | `false` | If `true`, shutdown hook runs `docker compose down -v --remove-orphans`. Prefer profile **`-Pe2e-teardown-volumes`** (used by full-build scripts) instead of `-D` to avoid Surefire duplicate-property warnings. |
 | `e2e.compose.up.timeoutMinutes` | `20` | Max wait for `docker compose up -d` (image pull can be slow) |

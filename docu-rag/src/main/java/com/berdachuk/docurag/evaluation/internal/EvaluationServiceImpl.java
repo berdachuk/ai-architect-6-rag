@@ -19,7 +19,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -39,10 +38,12 @@ public class EvaluationServiceImpl implements EvaluationApi {
     private final CustomChatProperties chatProperties;
     private final CustomEmbeddingProperties embeddingProperties;
     private final ObjectMapper objectMapper;
+    private final EvaluationSampleDatasetSeeder datasetSeeder;
 
     @Override
-    @Transactional
     public EvaluationRunStartedResponse run(EvaluationRunRequest request) {
+        validateRequest(request);
+        datasetSeeder.ensureDatasetSeeded(request.datasetName());
         String datasetId = repository.findDatasetIdByName(request.datasetName())
                 .orElseThrow(() -> new IllegalArgumentException("Unknown dataset: " + request.datasetName()));
         List<EvaluationJdbcRepository.EvalCaseRow> cases = repository.findCasesByDatasetId(datasetId);
@@ -55,10 +56,11 @@ public class EvaluationServiceImpl implements EvaluationApi {
 
         String runId = IdGenerator.generateId();
         OffsetDateTime started = OffsetDateTime.now();
-        repository.insertRun(runId, datasetId, started, chatProperties.getModel(), embeddingProperties.getModel());
+        repository.insertRun(runId, datasetId, started, chatProperties.getModel(), embeddingProperties.getModel(), semTh);
 
         int normHits = 0;
         double semSum = 0;
+        int semPassAt080 = 0;
         int semPass = 0;
         for (EvaluationJdbcRepository.EvalCaseRow c : cases) {
             RagAskResponse rag = ragAskApi.ask(new RagAskRequest(c.question(), topK, minScore));
@@ -73,6 +75,9 @@ public class EvaluationServiceImpl implements EvaluationApi {
             float[] gv = embeddingModel.embed(new Document(gt));
             double cos = VectorMath.cosineSimilarity(ev, gv);
             semSum += cos;
+            if (cos >= 0.80) {
+                semPassAt080++;
+            }
             boolean pass = cos >= semTh;
             if (pass) {
                 semPass++;
@@ -93,9 +98,34 @@ public class EvaluationServiceImpl implements EvaluationApi {
         int n = cases.size();
         double normAcc = n == 0 ? 0 : (double) normHits / n;
         double meanSem = n == 0 ? 0 : semSum / n;
-        double sem080 = n == 0 ? 0 : (double) semPass / n;
-        repository.finishRun(runId, OffsetDateTime.now(), normAcc, meanSem, sem080);
-        return new EvaluationRunStartedResponse(runId, n, round4(normAcc), round4(meanSem), round4(sem080));
+        double semAtThreshold = n == 0 ? 0 : (double) semPass / n;
+        double sem080 = n == 0 ? 0 : (double) semPassAt080 / n;
+        repository.finishRun(runId, OffsetDateTime.now(), normAcc, meanSem, semAtThreshold, sem080);
+        return new EvaluationRunStartedResponse(
+                runId,
+                n,
+                round4(normAcc),
+                round4(meanSem),
+                round4(semAtThreshold),
+                round4(semTh),
+                round4(sem080)
+        );
+    }
+
+    private static void validateRequest(EvaluationRunRequest request) {
+        if (request.datasetName() == null || request.datasetName().isBlank()) {
+            throw new IllegalArgumentException("datasetName is required");
+        }
+        if (request.topK() != null && request.topK() <= 0) {
+            throw new IllegalArgumentException("topK must be > 0");
+        }
+        if (request.minScore() != null && (request.minScore() < 0.0 || request.minScore() > 1.0)) {
+            throw new IllegalArgumentException("minScore must be between 0.0 and 1.0");
+        }
+        if (request.semanticPassThreshold() != null
+            && (request.semanticPassThreshold() < 0.0 || request.semanticPassThreshold() > 1.0)) {
+            throw new IllegalArgumentException("semanticPassThreshold must be between 0.0 and 1.0");
+        }
     }
 
     private String toJson(RagAskResponse rag) {
@@ -157,6 +187,8 @@ public class EvaluationServiceImpl implements EvaluationApi {
                 row.embeddingModelName(),
                 row.normalizedAccuracy(),
                 row.meanSemanticSimilarity(),
+                row.semanticAccuracy(),
+                row.semanticPassThreshold(),
                 row.semanticAccuracyAt080()
         );
     }

@@ -4,5 +4,9 @@ public interface IndexOperationsApi {
 
     void rebuildFullIndex();
 
+    int clearEmbeddings();
+
+    int clearChunks();
+
     IndexStatus getStatus();
 }

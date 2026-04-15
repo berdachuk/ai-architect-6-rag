@@ -35,8 +35,13 @@ public class EvalCliRunner implements ApplicationRunner {
         double sem = optArg(args, "semanticPassThreshold").map(Double::parseDouble).orElse(0.8);
         log.info("Running evaluation for dataset {}", dataset);
         var out = evaluationApi.run(new EvaluationRunRequest(dataset, topK, minScore, sem));
-        log.info("Finished run {} — normalizedAcc={} meanSem={} sem080={}",
-                out.runId(), out.normalizedAccuracy(), out.meanSemanticSimilarity(), out.semanticAccuracyAt080());
+        log.info("Finished run {} — normalizedAcc={} meanSem={} sem@th({})={} sem080={}",
+                out.runId(),
+                out.normalizedAccuracy(),
+                out.meanSemanticSimilarity(),
+                out.semanticPassThreshold(),
+                out.semanticAccuracy(),
+                out.semanticAccuracyAt080());
         int code = SpringApplication.exit(context, () -> 0);
         System.exit(code);
     }

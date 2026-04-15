@@ -21,14 +21,14 @@ Medical document **RAG** application: Spring Boot 4, Spring Modulith, PostgreSQL
 4. Run the app with profile **`local`**:
 
 ```text
-set CHAT_MODEL=gemma4:31b-cloud
+set CHAT_MODEL=gemma4:e4b
 set EMBEDDING_MODEL=nomic-embed-text
 mvn -q spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
 Optional: `CHAT_API_KEY` / `EMBEDDING_API_KEY` (often empty for Ollama).
 
-5. Open `http://localhost:8080/` — ingest via **Documents** (uses `docurag.ingestion.*` paths from `application.yml` / env), then call **`POST /api/index/rebuild`**, then use **QA**.
+5. Open `http://localhost:8084/` — ingest via **Documents** (uses `docurag.ingestion.*` paths from `application.yml` / env), then call **`POST /api/index/rebuild`**, then use **QA**.
 
 ## Run / debug in IntelliJ IDEA
 
@@ -47,7 +47,7 @@ Steps:
 
 Ports:
 
-- `local` profile: `http://localhost:8080/`
+- `local` profile: `http://localhost:8084/`
 - `e2e` profile: `http://localhost:18080/`
 
 ## REST (summary)
@@ -103,7 +103,7 @@ On Windows PowerShell:
 .\scripts\full-build-and-e2e.ps1 -TeardownVolumes
 ```
 
-You need **Docker** for `docker compose` (Postgres on host port **5433** by default). UI scenarios use **Playwright**; install browsers once as described in the E2E module README. By default, E2E uses app port **18080** to avoid common collisions on `8080`. Optional Maven overrides: `-De2e.app.port=18081`, `-De2e.pg.port=5433`, `-De2e.compose.dir=...`, `-De2e.app.jar=...`. For `docker compose down -v` on E2E JVM shutdown, use profile **`-Pe2e-teardown-volumes`** (defined in `docu-rag-e2e/pom.xml`); the full-build scripts activate it when using `--teardown-volumes` / `-TeardownVolumes`.
+You need **Docker** for `docker compose` (Postgres on host port **5433** by default). UI scenarios use **Playwright**; install browsers once as described in the E2E module README. By default, E2E uses app port **18080** to avoid common collisions with local default `8084`. Optional Maven overrides: `-De2e.app.port=18081`, `-De2e.pg.port=5433`, `-De2e.compose.dir=...`, `-De2e.app.jar=...`. For `docker compose down -v` on E2E JVM shutdown, use profile **`-Pe2e-teardown-volumes`** (defined in `docu-rag-e2e/pom.xml`); the full-build scripts activate it when using `--teardown-volumes` / `-TeardownVolumes`.
 
 ## Product definition
 

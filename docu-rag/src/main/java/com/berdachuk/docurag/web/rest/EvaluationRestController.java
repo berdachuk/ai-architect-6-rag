@@ -32,6 +32,8 @@ public class EvaluationRestController implements com.berdachuk.docurag.web.opena
                 .total(out.total())
                 .normalizedAccuracy(out.normalizedAccuracy())
                 .meanSemanticSimilarity(out.meanSemanticSimilarity())
+                .semanticAccuracy(out.semanticAccuracy())
+                .semanticPassThreshold(out.semanticPassThreshold())
                 .semanticAccuracyAt080(out.semanticAccuracyAt080());
         return ResponseEntity.ok(payload);
     }
@@ -70,6 +72,8 @@ public class EvaluationRestController implements com.berdachuk.docurag.web.opena
                 .embeddingModelName(summary.embeddingModelName())
                 .normalizedAccuracy(summary.normalizedAccuracy())
                 .meanSemanticSimilarity(summary.meanSemanticSimilarity())
+                .semanticAccuracy(summary.semanticAccuracy())
+                .semanticPassThreshold(summary.semanticPassThreshold())
                 .semanticAccuracyAt080(summary.semanticAccuracyAt080());
     }
 

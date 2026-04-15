@@ -1,9 +1,10 @@
 package com.berdachuk.docurag.evaluation.internal;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -24,6 +25,8 @@ public class EvaluationJdbcRepository {
             rs.getString("embedding_model_name"),
             rs.getBigDecimal("normalized_accuracy"),
             rs.getBigDecimal("mean_semantic_similarity"),
+            rs.getBigDecimal("semantic_accuracy_at_threshold"),
+            rs.getBigDecimal("semantic_pass_threshold"),
             rs.getBigDecimal("semantic_accuracy_at_080")
     );
 
@@ -36,6 +39,74 @@ public class EvaluationJdbcRepository {
                 String.class
         );
         return ids.stream().findFirst();
+    }
+
+    public int countCasesByDatasetId(String datasetId) {
+        Integer count = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM evaluation_case WHERE dataset_id = :datasetId",
+                Map.of("datasetId", datasetId),
+                Integer.class
+        );
+        return count == null ? 0 : count;
+    }
+
+    @Transactional
+    public void insertDatasetIfMissing(String id, String name, String version, String description) {
+        jdbc.update("""
+                        INSERT INTO evaluation_dataset (id, name, version, description)
+                        VALUES (:id, :name, :version, :description)
+                        ON CONFLICT (name) DO NOTHING
+                        """,
+                Map.of(
+                        "id", id,
+                        "name", name,
+                        "version", version,
+                        "description", description
+                ));
+    }
+
+    @Transactional
+    public void insertCase(
+            String id,
+            String datasetId,
+            String externalCaseId,
+            String question,
+            String groundTruth,
+            String category,
+            String difficulty,
+            String metadataJson
+    ) {
+        jdbc.update("""
+                        INSERT INTO evaluation_case (
+                          id,
+                          dataset_id,
+                          external_case_id,
+                          question,
+                          ground_truth_answer,
+                          category,
+                          difficulty,
+                          metadata_json
+                        ) VALUES (
+                          :id,
+                          :datasetId,
+                          :externalCaseId,
+                          :question,
+                          :groundTruth,
+                          :category,
+                          :difficulty,
+                          CAST(:metadataJson AS jsonb)
+                        )
+                        """,
+                Map.of(
+                        "id", id,
+                        "datasetId", datasetId,
+                        "externalCaseId", externalCaseId,
+                        "question", question,
+                        "groundTruth", groundTruth,
+                        "category", category,
+                        "difficulty", difficulty,
+                        "metadataJson", metadataJson == null ? "{}" : metadataJson
+                ));
     }
 
     public List<EvalCaseRow> findCasesByDatasetId(String datasetId) {
@@ -51,12 +122,14 @@ public class EvaluationJdbcRepository {
                 ));
     }
 
+    @Transactional
     public void insertRun(
             String id,
             String datasetId,
             OffsetDateTime started,
             String modelName,
-            String embeddingModelName
+            String embeddingModelName,
+            double semanticPassThreshold
     ) {
         jdbc.update("""
                         INSERT INTO evaluation_run (
@@ -64,28 +137,33 @@ public class EvaluationJdbcRepository {
                           dataset_id,
                           started_at,
                           model_name,
-                          embedding_model_name
+                          embedding_model_name,
+                          semantic_pass_threshold
                         ) VALUES (
                           :runId,
                           :datasetId,
                           :startedAt,
                           :modelName,
-                          :embeddingModelName
+                          :embeddingModelName,
+                          :semanticPassThreshold
                         )
                         """, Map.of(
                 "runId", id,
                 "datasetId", datasetId,
                 "startedAt", started,
                 "modelName", modelName,
-                "embeddingModelName", embeddingModelName
+                "embeddingModelName", embeddingModelName,
+                "semanticPassThreshold", semanticPassThreshold
         ));
     }
 
+    @Transactional
     public void finishRun(
             String id,
             OffsetDateTime finished,
             double normalizedAccuracy,
             double meanSemantic,
+            double semanticAtThreshold,
             double semanticAt080
     ) {
         jdbc.update("""
@@ -93,6 +171,7 @@ public class EvaluationJdbcRepository {
                         SET finished_at = :finishedAt,
                             normalized_accuracy = :normalizedAccuracy,
                             mean_semantic_similarity = :meanSemanticSimilarity,
+                            semantic_accuracy_at_threshold = :semanticAccuracyAtThreshold,
                             semantic_accuracy_at_080 = :semanticAccuracyAt080
                         WHERE id = :runId
                         """, Map.of(
@@ -100,10 +179,12 @@ public class EvaluationJdbcRepository {
                 "finishedAt", finished,
                 "normalizedAccuracy", normalizedAccuracy,
                 "meanSemanticSimilarity", meanSemantic,
+                "semanticAccuracyAtThreshold", semanticAtThreshold,
                 "semanticAccuracyAt080", semanticAt080
         ));
     }
 
+    @Transactional
     public void insertResult(
             String id,
             String runId,
@@ -153,7 +234,8 @@ public class EvaluationJdbcRepository {
     public List<RunRow> listRuns() {
         return jdbc.query("""
                         SELECT id, dataset_id, started_at, finished_at, model_name, embedding_model_name,
-                               normalized_accuracy, mean_semantic_similarity, semantic_accuracy_at_080
+                               normalized_accuracy, mean_semantic_similarity, semantic_accuracy_at_threshold,
+                               semantic_pass_threshold, semantic_accuracy_at_080
                         FROM evaluation_run ORDER BY started_at DESC
                         """, Map.of(), RUN_ROW_MAPPER);
     }
@@ -161,7 +243,8 @@ public class EvaluationJdbcRepository {
     public Optional<RunRow> findRun(String id) {
         List<RunRow> rows = jdbc.query("""
                         SELECT id, dataset_id, started_at, finished_at, model_name, embedding_model_name,
-                               normalized_accuracy, mean_semantic_similarity, semantic_accuracy_at_080
+                               normalized_accuracy, mean_semantic_similarity, semantic_accuracy_at_threshold,
+                               semantic_pass_threshold, semantic_accuracy_at_080
                         FROM evaluation_run
                         WHERE id = :runId
                         """, Map.of("runId", id), RUN_ROW_MAPPER);
@@ -201,6 +284,8 @@ public class EvaluationJdbcRepository {
             String embeddingModelName,
             BigDecimal normalizedAccuracy,
             BigDecimal meanSemanticSimilarity,
+            BigDecimal semanticAccuracy,
+            BigDecimal semanticPassThreshold,
             BigDecimal semanticAccuracyAt080
     ) {
     }

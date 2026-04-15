@@ -5,6 +5,8 @@ public record EvaluationRunStartedResponse(
         int total,
         double normalizedAccuracy,
         double meanSemanticSimilarity,
+        double semanticAccuracy,
+        double semanticPassThreshold,
         double semanticAccuracyAt080
 ) {
 }

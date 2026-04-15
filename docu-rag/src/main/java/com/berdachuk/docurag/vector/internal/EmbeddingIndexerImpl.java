@@ -24,6 +24,7 @@ public class EmbeddingIndexerImpl implements EmbeddingIndexerApi {
     private final EmbeddingModel embeddingModel;
     private final EmbeddingJdbcRepository repository;
     private final DocuRagProperties docuRagProperties;
+    private final IndexingProgressTracker progressTracker;
 
     @Override
     @Transactional
@@ -36,6 +37,8 @@ public class EmbeddingIndexerImpl implements EmbeddingIndexerApi {
         if (emb.isDropIndexesDuringGeneration()) {
             log.warn("docurag.ingestion.embeddings.drop-indexes-during-generation=true — no chunk embedding indexes to drop yet; ignoring");
         }
+
+        progressTracker.markEmbeddingPhase(repository.countChunksWithoutEmbedding());
 
         int total = 0;
         int dbBatchCount = 0;
@@ -55,6 +58,7 @@ public class EmbeddingIndexerImpl implements EmbeddingIndexerApi {
                     repository.updateEmbedding(slice.get(i).id(), literal);
                     total++;
                 }
+                progressTracker.markEmbeddingProgress(total);
             }
             if (dbBatchCount % logEvery == 0) {
                 log.info("Embedding progress: {} DB batch(es), {} vectors written so far", dbBatchCount, total);

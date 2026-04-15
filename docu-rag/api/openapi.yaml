@@ -4,7 +4,7 @@ info:
   description: Medical document RAG — Spring Boot. E2E client source of truth; keep aligned with controllers under com.berdachuk.docurag.web.rest.
   version: 0.1.0
 servers:
-  - url: http://localhost:8080
+  - url: http://localhost:8084
     description: Local default
   - url: http://localhost:18080
     description: Local E2E / stub-AI profile
@@ -497,12 +497,17 @@ components:
         topK:
           type: integer
           format: int32
+          minimum: 1
         minScore:
           type: number
           format: double
+          minimum: 0
+          maximum: 1
         semanticPassThreshold:
           type: number
           format: double
+          minimum: 0
+          maximum: 1
 
     EvaluationRunStartedResponse:
       type: object
@@ -516,6 +521,12 @@ components:
           type: number
           format: double
         meanSemanticSimilarity:
+          type: number
+          format: double
+        semanticAccuracy:
+          type: number
+          format: double
+        semanticPassThreshold:
           type: number
           format: double
         semanticAccuracyAt080:
@@ -548,6 +559,12 @@ components:
           type: number
           nullable: true
         meanSemanticSimilarity:
+          type: number
+          nullable: true
+        semanticAccuracy:
+          type: number
+          nullable: true
+        semanticPassThreshold:
           type: number
           nullable: true
         semanticAccuracyAt080:

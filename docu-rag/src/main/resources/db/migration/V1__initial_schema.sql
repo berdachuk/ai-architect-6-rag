@@ -71,6 +71,8 @@ CREATE TABLE evaluation_run (
     embedding_model_name TEXT NOT NULL,
     normalized_accuracy NUMERIC,
     mean_semantic_similarity NUMERIC,
+    semantic_pass_threshold NUMERIC,
+    semantic_accuracy_at_threshold NUMERIC,
     semantic_accuracy_at_080 NUMERIC,
     notes TEXT
 );

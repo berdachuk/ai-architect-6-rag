@@ -148,7 +148,7 @@ From `docu-rag/`:
 
 ```bash
 cd docu-rag
-export CHAT_MODEL=gemma4:31b-cloud
+export CHAT_MODEL=gemma4:e4b
 export EMBEDDING_MODEL=nomic-embed-text
 mvn spring-boot:run -Dspring-boot.run.profiles=local
 ```
@@ -156,7 +156,7 @@ mvn spring-boot:run -Dspring-boot.run.profiles=local
 Windows (cmd):
 
 ```text
-set CHAT_MODEL=gemma4:31b-cloud
+set CHAT_MODEL=gemma4:e4b
 set EMBEDDING_MODEL=nomic-embed-text
 mvn spring-boot:run -Dspring-boot.run.profiles=local
 ```

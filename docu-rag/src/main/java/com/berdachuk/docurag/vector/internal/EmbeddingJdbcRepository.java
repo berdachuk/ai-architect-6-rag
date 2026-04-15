@@ -23,6 +23,15 @@ public class EmbeddingJdbcRepository {
                 (rs, rowNum) -> new ChunkEmbeddingRow(rs.getString("id"), rs.getString("chunk_text")));
     }
 
+    public int countChunksWithoutEmbedding() {
+        Integer n = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM document_chunk WHERE embedding IS NULL",
+                Map.of(),
+                Integer.class
+        );
+        return n == null ? 0 : n;
+    }
+
     public void updateEmbedding(String chunkId, String vectorLiteral) {
         jdbc.update(
                 "UPDATE document_chunk SET embedding = CAST(:vectorLiteral AS vector) WHERE id = :chunkId",

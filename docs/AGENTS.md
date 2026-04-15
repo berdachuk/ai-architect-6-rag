@@ -19,7 +19,7 @@ mkdocs build -s
 
 - If `/api/**` changes in code, ensure `docu-rag/api/openapi.yaml` stays aligned (E2E depends on it).
 - If profiles/ports change:
-  - `local` defaults to `8080`
+  - `local` defaults to `8084`
   - `e2e` defaults to `18080` (stub AI)
   Update the Developer Guide + any diagrams/flows.
 - Prefer linking to files in-repo over duplicating long content.
@@ -28,4 +28,3 @@ mkdocs build -s
 
 - `../.claude/skills/core-architecture/SKILL.md`
 - `../.claude/skills/api-design/SKILL.md`
-

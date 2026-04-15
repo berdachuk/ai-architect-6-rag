@@ -18,6 +18,7 @@
 # Local sample data (downloaded/prepared from Hugging Face / PDFs)
 data/_hf/
 data/corpus/_sample/
+data/corpus/medical-rag-corpus.full.jsonl
 data/corpus/subset-manifest.json
 data/pdf-demo/manifest.json
 data/pdf-demo/*.pdf

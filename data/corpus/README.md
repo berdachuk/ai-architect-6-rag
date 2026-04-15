@@ -4,8 +4,8 @@ This folder documents how to build a **repeatable subset** of the primary datase
 
 ## Files
 
-| File | Purpose |
-|------|---------|
+| File                           | Purpose                                                                                                                                                                  |
+|--------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `subset-manifest.example.json` | Machine-readable policy: dataset id, target row band (2k–5k), suggested categories, export format, ingest hooks. Copy to `subset-manifest.json` and adjust for your run. |
 
 ## Workflow
@@ -26,14 +26,14 @@ For **PDF** demos (separate from HF), use [../pdf-demo/README.md](../pdf-demo/RE
 
 The repo ships a pre-downloaded `final_corpus.pkl` (288 MB, 216,102 rows) under `../_hf/`. It is a **pandas DataFrame** with columns:
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `doc_id` | string | Row identifier |
-| `text` | string | Full content (Q&A, summary, etc.) |
-| `title` | string | Entity / document title |
-| `source` | string | Origin dataset (`medquad`, `medqa`, …) |
-| `category` | string | Row type (see below) |
-| `meta_json` | string | JSON string with additional fields |
+| Column      | Type   | Description                            |
+|-------------|--------|----------------------------------------|
+| `doc_id`    | string | Row identifier                         |
+| `text`      | string | Full content (Q&A, summary, etc.)      |
+| `title`     | string | Entity / document title                |
+| `source`    | string | Origin dataset (`medquad`, `medqa`, …) |
+| `category`  | string | Row type (see below)                   |
+| `meta_json` | string | JSON string with additional fields     |
 
 **Available categories and row counts:**
 

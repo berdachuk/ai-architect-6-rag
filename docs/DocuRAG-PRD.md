@@ -499,7 +499,7 @@ Response:
 ```json
 {
   "answer": "First-line management typically includes lifestyle modification and guideline-supported antihypertensive therapy such as thiazide diuretics, ACE inhibitors, ARBs, or calcium channel blockers depending on patient factors.",
-  "model": "gemma4:31b-cloud",
+  "model": "gemma4:e4b",
   "retrievedChunks": [
     {
       "documentId": "674a1b2c3d4e5f6789012345",
@@ -583,7 +583,7 @@ DocuRAG shall follow the same **integration pattern** as ExpertMatch (`spring-ai
   - `provider` — `openai` (meaning OpenAI-**compatible** HTTP API, including Ollama).
   - `base-url` — e.g. Ollama OpenAI-compatible base URL.
   - `api-key` — often empty for local Ollama; required for cloud providers.
-  - `model` — e.g. `gemma4:31b-cloud`.
+  - `model` — e.g. `gemma4:e4b`.
   - `temperature`, `max-tokens` — tunable.
 - Use **`spring.ai.custom.embedding.*`** for the **embedding** endpoint (may be **same host** as chat or **different** provider):
   - `base-url`, `api-key`, `model` (e.g. `nomic-embed-text`), **`dimensions` = `768`**.
@@ -600,7 +600,7 @@ DocuRAG shall follow the same **integration pattern** as ExpertMatch (`spring-ai
 
 **5. DocuRAG default targets (Ollama)**
 
-- **Chat:** OpenAI-compatible Ollama endpoint; model **`gemma4:31b-cloud`** (or Run owner default).
+- **Chat:** OpenAI-compatible Ollama endpoint; model **`gemma4:e4b`** (or Run owner default).
 - **Embeddings:** same or separate Ollama base URL; model **`nomic-embed-text`**; **768** dimensions matching DB and metrics.
 
 **6. Testing (ExpertMatch-style)**
