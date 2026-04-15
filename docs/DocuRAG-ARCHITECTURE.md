@@ -156,13 +156,13 @@ flowchart TB
 | `core` | `...docurag.core` | DataSource/JDBC config, **`DocuRagAiConfiguration`**, **`IdGenerator`**, shared exceptions; often **OPEN** |
 | `documents` | `...docurag.documents` | Corpus ingest (**structured + PDF**), `source_document`, **PDFBox** (or equivalent) |
 | `chunking` | `...docurag.chunking` | Chunking policy + chunk rows |
-| `vector` | `...docurag.vector` | **`EmbeddingModel`** calls, pgvector writes |
+| `vector` | `...docurag.vector` | **`EmbeddingModel`** calls, pgvector writes; **`IndexingProgressApi`** (`.api`) exposes indexing progress to `web` |
 | `retrieval` | `...docurag.retrieval` | Similarity search, **no** generative LLM |
 | `llm` | `...docurag.llm` | **`ChatClient`**, advisors, RAG assembly |
 | `extraction` | `...docurag.extraction` | Structured extraction for viz |
 | `visualization` | `...docurag.visualization` | Chart/graph DTOs |
 | `evaluation` | `...docurag.evaluation` | Eval runs, scoring, persistence |
-| `web` | `...docurag.web` | REST + Thymeleaf; **OPEN** or wide deps |
+| `web` | `...docurag.web` | REST + Thymeleaf; **`DocumentIngestOrchestrator`** coordinates async ingest + indexing pipeline; **OPEN** or wide deps |
 
 ### 5.2 Declared dependency DAG (initial)
 
@@ -224,7 +224,7 @@ flowchart BT
 
 ### 6.1 Ingestion and indexing
 
-`documents` → `chunking` → `vector`: normalize rows, dedupe by `external_id`/hash, assign **`IdGenerator`** ids, split chunks, batch **embed**, upsert **`document_chunk.embedding`**.
+`web` (`DocumentIngestOrchestrator`) → `documents` → `chunking` → `vector`: `Orchestrator` starts async task, tracks progress via **`IndexingProgressApi`**, normalizes rows, dedupes by `external_id`/hash, assigns **`IdGenerator`** ids, splits chunks, batch **embed**, upserts **`document_chunk.embedding`**.
 
 ### 6.2 Question answering
 
