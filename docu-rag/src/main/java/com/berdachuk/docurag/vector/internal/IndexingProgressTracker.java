@@ -31,6 +31,13 @@ public class IndexingProgressTracker implements IndexingProgressApi {
         this.updatedAt = this.startedAt;
     }
 
+    public synchronized void stop() {
+        this.running = false;
+        this.phase = "STOPPED";
+        this.message = "Ingest/index stopped by user.";
+        this.updatedAt = OffsetDateTime.now();
+    }
+
     public synchronized void markIngestCompleted(String ingestJobId, int loaded, int skipped) {
         if (!running) {
             return;

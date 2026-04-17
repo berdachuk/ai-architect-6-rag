@@ -6,6 +6,8 @@ public interface IndexingProgressApi {
 
     void start(String runId, String message);
 
+    void stop();
+
     void markIngestCompleted(String ingestJobId, int loaded, int skipped);
 
     void markChunkingPhase();

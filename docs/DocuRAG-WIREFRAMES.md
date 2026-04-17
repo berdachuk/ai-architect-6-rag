@@ -169,8 +169,7 @@ Aligned with [DocuRAG-PRD.md](DocuRAG-PRD.md), [DocuRAG-FORMS-AND-FLOWS.md](Docu
             - Text: [selected path]
             - Hidden file input for browser folder upload
         - [Button] Full cleanup (remove all docs + chunks)
-        - [Button] Ingest configured paths
-        - [Button] Start ingest
+        - [Button] Start ingest (toggles to Stop ingest during progress)
 
     - Section: Action result
         - Message: [index action status]

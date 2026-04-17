@@ -143,6 +143,12 @@ public class DocumentsController {
         return ResponseEntity.ok(indexingProgressApi.snapshot());
     }
 
+    @PostMapping("/documents/stop")
+    public ResponseEntity<Void> stopIngest() {
+        indexingProgressApi.stop();
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("/documents/set-folder")
     public String setFolderPath(
             Model model,
