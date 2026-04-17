@@ -64,6 +64,7 @@ public class DocuRagApplication {
         log.info("  Home page: http://localhost:{}/", webPort);
         log.info("  API docs: http://localhost:{}/v3/api-docs", webPort);
         log.info("  Swagger UI: http://localhost:{}/swagger-ui/index.html", webPort);
+        log.info("  Health: http://localhost:{}/actuator/health", webPort);
         log.info("========================================");
     }
 

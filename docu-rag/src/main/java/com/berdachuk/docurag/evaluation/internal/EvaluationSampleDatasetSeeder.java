@@ -26,7 +26,7 @@ public class EvaluationSampleDatasetSeeder {
     private static final String DATASET_VERSION = "1";
     private static final String DATASET_DESCRIPTION = "Seeded from classpath:evaluation/medical-rag-corpus.sample.500.jsonl";
     private static final String DATASET_RESOURCE_PATH = "evaluation/medical-rag-corpus.sample.500.jsonl";
-    private static final int MAX_CASES = 50;
+    private static final int MAX_CASES = 20;
 
     private final EvaluationJdbcRepository repository;
     private final ObjectMapper objectMapper;
