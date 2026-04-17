@@ -14,6 +14,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -69,7 +70,7 @@ public class EvaluationSampleDatasetSeeder {
                     continue;
                 }
                 JsonNode row = objectMapper.readTree(line);
-                JsonNode meta = row.path("meta_json");
+                JsonNode meta = parseMeta(row.path("meta_json"));
                 if (!meta.isObject()) {
                     continue;
                 }
@@ -105,6 +106,28 @@ public class EvaluationSampleDatasetSeeder {
             throw new IllegalStateException("No evaluation cases were extracted from " + DATASET_RESOURCE_PATH);
         }
         return inserted;
+    }
+
+    JsonNode parseMeta(JsonNode metaNode) {
+        if (metaNode == null || metaNode.isMissingNode() || metaNode.isNull()) {
+            return objectMapper.nullNode();
+        }
+        if (metaNode.isObject()) {
+            return metaNode;
+        }
+        if (!metaNode.isTextual()) {
+            return objectMapper.nullNode();
+        }
+        String raw = metaNode.asText();
+        if (raw == null || raw.isBlank()) {
+            return objectMapper.nullNode();
+        }
+        try {
+            return objectMapper.readTree(raw);
+        } catch (IOException e) {
+            log.warn("Skipping evaluation row with malformed meta_json: {}", e.getMessage());
+            return objectMapper.convertValue(Map.of(), JsonNode.class);
+        }
     }
 
     private static String textOrNull(JsonNode node, String fieldName) {

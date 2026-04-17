@@ -120,7 +120,9 @@ public class UiSteps {
         Page page = currentPage();
         page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Ingest configured paths"))
                 .click(new Locator.ClickOptions().setNoWaitAfter(true));
-        page.getByText(Pattern.compile("Job\\s+")).waitFor(new Locator.WaitForOptions().setTimeout(90_000));
+        page.locator("#ingestStatus")
+                .getByText(Pattern.compile("COMPLETED"))
+                .waitFor(new Locator.WaitForOptions().setTimeout(90_000));
     }
 
     @Then("the documents page shows ingest job completed successfully")

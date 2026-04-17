@@ -48,19 +48,13 @@
     </div>
     <div class="card">
         <p>Total: <span th:text="${total}">0</span></p>
-        <form id="ingestPathForm" method="post" th:action="@{/documents/ingest-path}">
-            <div class="path-row">
-                <input class="path-input"
-                       type="text"
-                       name="ingestPath"
-                       th:value="${selectedIngestPath}"
-                       placeholder="/absolute/path/to/folder/or/file"
-                       aria-label="Folder or file path for indexing"/>        
-            </div>
+        <form id="setFolderForm" method="post" th:action="@{/documents/set-folder}">
+            <input id="selectedIngestPathHidden" type="hidden" name="selectedIngestPath" th:value="${selectedIngestPath}"/>
         </form>
         <form id="folderUploadForm" method="post" th:action="@{/documents/ingest-upload}" enctype="multipart/form-data">        
             <div class="path-row">
                 <button class="secondary" id="openFolderDialogBtn" type="button">Choose data folder</button>
+                <span id="selectedPathDisplay" class="muted" th:text="${selectedIngestPath}">/path/to/data</span>
             </div>        
             <input id="selectedIngestPathUpload" type="hidden" name="selectedIngestPath" th:value="${selectedIngestPath}"/>
             <input id="folderInput"
@@ -76,7 +70,10 @@
                 <input type="hidden" name="page" th:value="${page}"/>
                 <button class="danger" type="submit">Full cleanup (remove all docs + chunks)</button>
             </form>
-            <button type="submit" form="ingestPathForm">Start ingest</button>
+            <form method="post" th:action="@{/documents/ingest}">
+                <button type="submit">Ingest configured paths</button>
+            </form>
+            <button type="submit" form="folderUploadForm">Start ingest</button>
         </div>
         
         <p th:if="${indexActionMessage != null}">
@@ -178,40 +175,32 @@
         const folderInput = document.getElementById('folderInput');
         const openFolderDialogBtn = document.getElementById('openFolderDialogBtn');
         const folderUploadForm = document.getElementById('folderUploadForm');
-        const pathInput = document.querySelector('input[name="ingestPath"]');
         const selectedIngestPathUpload = document.getElementById('selectedIngestPathUpload');
-        function syncSelectedPath() {
-            if (!pathInput) {
-                return;
-            }
-            const value = pathInput.value || '';
+        const selectedPathDisplay = document.getElementById('selectedPathDisplay');
+        function syncSelectedPath(path) {
             if (selectedIngestPathUpload) {
-                selectedIngestPathUpload.value = value;
+                selectedIngestPathUpload.value = path || '';
+            }
+            if (selectedPathDisplay) {
+                selectedPathDisplay.textContent = path || '';
             }
         }
         if (folderInput && openFolderDialogBtn && folderUploadForm) {
-            syncSelectedPath();
-            if (pathInput) {
-                pathInput.addEventListener('input', syncSelectedPath);
-                pathInput.addEventListener('change', syncSelectedPath);
+            if (selectedPathDisplay) {
+                selectedPathDisplay.textContent = selectedIngestPathUpload?.value || '';
             }
             openFolderDialogBtn.addEventListener('click', async function () {
-                syncSelectedPath();
                 try {
-                    const params = new URLSearchParams();
-                    if (pathInput && pathInput.value) {
-                        params.set('currentPath', pathInput.value);
-                    }
                     const response = await fetch('/documents/select-folder', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'},
-                        body: params.toString()
+                        body: ''
                     });
                     if (response.ok) {
                         const payload = await response.json();
-                        if (payload && payload.selectedPath && pathInput) {
-                            pathInput.value = payload.selectedPath;
-                            syncSelectedPath();
+                        if (payload && payload.selectedPath) {
+                            syncSelectedPath(payload.selectedPath);
+                            document.getElementById('setFolderForm').submit();
                             return;
                         }
                         if (payload && payload.cancelled) {
@@ -225,7 +214,17 @@
             });
             folderInput.addEventListener('change', function () {
                 if (folderInput.files && folderInput.files.length > 0) {
-                    folderUploadForm.submit();
+                    const items = folderInput.files;
+                    let path = '';
+                    if (items.length > 0) {
+                        path = items[0].webkitRelativePath || items[0].name;
+                        const idx = path.indexOf('/');
+                        if (idx > 0) {
+                            path = path.substring(0, idx);
+                        }
+                    }
+                    syncSelectedPath(path);
+                    document.getElementById('setFolderForm').submit();
                 }
             });
         }

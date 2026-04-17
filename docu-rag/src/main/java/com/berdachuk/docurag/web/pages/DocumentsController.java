@@ -1,15 +1,8 @@
 package com.berdachuk.docurag.web.pages;
 
+import com.berdachuk.docurag.core.config.DocuRagProperties;
 import com.berdachuk.docurag.documents.api.DocumentCatalogApi;
-import com.berdachuk.docurag.documents.api.DocumentIngestApi;
-import com.berdachuk.docurag.evaluation.api.EvaluationApi;
-import com.berdachuk.docurag.evaluation.api.EvaluationRunDetail;
-import com.berdachuk.docurag.evaluation.api.EvaluationRunRequest;
-import com.berdachuk.docurag.llm.api.RagAskApi;
-import com.berdachuk.docurag.llm.api.RagAskRequest;
-import com.berdachuk.docurag.llm.api.RagAskResponse;
 import com.berdachuk.docurag.vector.api.IndexOperationsApi;
-import com.berdachuk.docurag.vector.api.IndexStatus;
 import com.berdachuk.docurag.vector.api.IndexingProgressApi;
 import com.berdachuk.docurag.vector.api.IndexingProgressApi.ProgressSnapshot;
 import lombok.RequiredArgsConstructor;
@@ -26,57 +19,23 @@ import javax.swing.JFileChooser;
 import javax.swing.SwingUtilities;
 import java.awt.GraphicsEnvironment;
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.Comparator;
 
 @Controller
 @RequiredArgsConstructor
-public class DemoPagesController {
+public class DocumentsController {
 
     private final IndexOperationsApi indexOperationsApi;
     private final DocumentCatalogApi documentCatalogApi;
-    private final DocumentIngestApi documentIngestApi;
     private final DocumentIngestOrchestrator ingestOrchestrator;
     private final IndexingProgressApi indexingProgressApi;
-    private final RagAskApi ragAskApi;
-    private final EvaluationApi evaluationApi;
-
-    @GetMapping("/")
-    public String home(Model model) {
-        IndexStatus status = indexOperationsApi.getStatus();
-        model.addAttribute("indexStatus", status);
-        model.addAttribute("docCount", status.documentCount());
-        Optional<EvaluationRunDetail> latest = evaluationApi.getLatestRun();
-        model.addAttribute("latestEval", latest.orElse(null));
-        return "home";
-    }
-
-    @GetMapping("/qa")
-    public String qaForm(Model model) {
-        model.addAttribute("ragResult", null);
-        return "qa";
-    }
-
-    @PostMapping("/qa")
-    public String qaSubmit(
-            Model model,
-            @RequestParam String question,
-            @RequestParam(defaultValue = "5") int topK,
-            @RequestParam(defaultValue = "0.5") double minScore
-    ) {
-        RagAskResponse rag = ragAskApi.ask(new RagAskRequest(question, topK, minScore));
-        model.addAttribute("ragResult", rag);
-        model.addAttribute("question", question);
-        model.addAttribute("topK", topK);
-        model.addAttribute("minScore", minScore);
-        return "qa";
-    }
+    private final DocuRagProperties properties;
 
     @GetMapping("/documents")
     public String documents(Model model, @RequestParam(defaultValue = "0") int page) {
@@ -153,18 +112,19 @@ public class DemoPagesController {
                     () -> deleteRecursivelyQuietly(cleanupDir)
             );
             model.addAttribute("indexActionMessage", "Started ingest + indexing run " + runId + " from uploaded files. Progress is updating above.");
+            populateDocumentsPage(model, 0);
+            return "documents";
         } catch (Exception e) {
             model.addAttribute("indexActionMessage", "Folder ingest failed: " + e.getMessage());
+            populateDocumentsPage(model, 0);
+            return "documents";
         }
-
-        populateDocumentsPage(model, 0);
-        return "documents";
     }
 
     @PostMapping("/documents/index/clear-embeddings")
     public String clearEmbeddings(Model model, @RequestParam(defaultValue = "0") int page) {
         int affected = indexOperationsApi.clearEmbeddings();
-        model.addAttribute("indexActionMessage", "Cleared embeddings for " + affected + " chunk(s).");
+        model.addAttribute("indexActionMessage", "Embeddings cleared: deleted " + affected + " chunk embeddings.");
         populateDocumentsPage(model, page);
         return "documents";
     }
@@ -177,15 +137,21 @@ public class DemoPagesController {
         return "documents";
     }
 
-    @GetMapping("/analysis")
-    public String analysis(Model model) {
-        return "analysis";
-    }
-
     @GetMapping("/documents/progress")
     @ResponseBody
     public ResponseEntity<ProgressSnapshot> documentsProgress() {
         return ResponseEntity.ok(indexingProgressApi.snapshot());
+    }
+
+    @PostMapping("/documents/set-folder")
+    public String setFolderPath(
+            Model model,
+            @RequestParam String selectedIngestPath
+    ) {
+        String selectedPath = selectedIngestPath == null ? "" : selectedIngestPath.trim();
+        model.addAttribute("selectedIngestPath", selectedPath);
+        populateDocumentsPage(model, 0);
+        return "documents";
     }
 
     @PostMapping("/documents/select-folder")
@@ -215,37 +181,6 @@ public class DemoPagesController {
         }
     }
 
-    @GetMapping("/evaluation")
-    public String evaluationForm(Model model) {
-        model.addAttribute("runs", evaluationApi.listRuns());
-        model.addAttribute("runResult", null);
-        model.addAttribute("runError", null);
-        model.addAttribute("highlightRunId", null);
-        return "evaluation";
-    }
-
-    @PostMapping("/evaluation/run")
-    public String evaluationRun(
-            Model model,
-            @RequestParam String datasetName,
-            @RequestParam(defaultValue = "5") int topK,
-            @RequestParam(defaultValue = "0.5") double minScore,
-            @RequestParam(defaultValue = "0.8") double semanticPassThreshold
-    ) {
-        model.addAttribute("runError", null);
-        try {
-            var started = evaluationApi.run(new EvaluationRunRequest(datasetName, topK, minScore, semanticPassThreshold));
-            model.addAttribute("runResult", started);
-            model.addAttribute("highlightRunId", started.runId());
-        } catch (IllegalArgumentException | IllegalStateException ex) {
-            model.addAttribute("runResult", null);
-            model.addAttribute("runError", ex.getMessage());
-            model.addAttribute("highlightRunId", null);
-        }
-        model.addAttribute("runs", evaluationApi.listRuns());
-        return "evaluation";
-    }
-
     private void populateDocumentsPage(Model model, int page) {
         model.addAttribute("documents", documentCatalogApi.listDocuments(page, 25));
         model.addAttribute("total", documentCatalogApi.countDocuments());
@@ -257,17 +192,15 @@ public class DemoPagesController {
     }
 
     private String resolveDefaultIngestPath() {
-        List<Path> candidates = List.of(
-                Path.of("data/corpus/_sample"),
-                Path.of("data/pdf-demo/downloaded")
-        );
-        for (Path candidate : candidates) {
-            Path absolute = candidate.toAbsolutePath().normalize();
-            if (Files.exists(absolute)) {
-                return absolute.toString();
-            }
+        String corpus = properties.getIngestion().getCorpusPath();
+        if (corpus != null && !corpus.isBlank() && Files.exists(Path.of(corpus))) {
+            return corpus;
         }
-        return candidates.getFirst().toAbsolutePath().normalize().toString();
+        String pdf = properties.getIngestion().getPdfDemoPath();
+        if (pdf != null && !pdf.isBlank() && Files.exists(Path.of(pdf))) {
+            return pdf;
+        }
+        return "/path/to/your/data";
     }
 
     private void deleteRecursivelyQuietly(Path root) {
@@ -279,11 +212,11 @@ public class DemoPagesController {
                     .forEach(path -> {
                         try {
                             Files.deleteIfExists(path);
-                        } catch (IOException ignored) {
+                        } catch (java.io.IOException ignored) {
                             // Best effort temp cleanup.
                         }
                     });
-        } catch (IOException ignored) {
+        } catch (java.io.IOException ignored) {
             // Best effort temp cleanup.
         }
     }

@@ -541,6 +541,8 @@ Response:
 
 The Thymeleaf UI is intended only for demonstration and operator convenience, not for full product-grade interaction design. It should remain intentionally simple and stable.
 
+Screen-level UX requirements are captured as text-based wireframes in [DocuRAG-WIREFRAMES.md](DocuRAG-WIREFRAMES.md). Product documentation should keep those wireframes aligned with any page inventory, form, or visible-label changes.
+
 ### Required pages
 
 - `/` — dashboard with counts, ingestion status, latest evaluation summary, and links.

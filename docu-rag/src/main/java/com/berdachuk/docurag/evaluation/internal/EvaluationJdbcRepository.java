@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -97,16 +98,29 @@ public class EvaluationJdbcRepository {
                           CAST(:metadataJson AS jsonb)
                         )
                         """,
-                Map.of(
-                        "id", id,
-                        "datasetId", datasetId,
-                        "externalCaseId", externalCaseId,
-                        "question", question,
-                        "groundTruth", groundTruth,
-                        "category", category,
-                        "difficulty", difficulty,
-                        "metadataJson", metadataJson == null ? "{}" : metadataJson
-                ));
+                caseParams(id, datasetId, externalCaseId, question, groundTruth, category, difficulty, metadataJson));
+    }
+
+    private static Map<String, Object> caseParams(
+            String id,
+            String datasetId,
+            String externalCaseId,
+            String question,
+            String groundTruth,
+            String category,
+            String difficulty,
+            String metadataJson
+    ) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("id", id);
+        params.put("datasetId", datasetId);
+        params.put("externalCaseId", externalCaseId);
+        params.put("question", question);
+        params.put("groundTruth", groundTruth);
+        params.put("category", category);
+        params.put("difficulty", difficulty);
+        params.put("metadataJson", metadataJson == null ? "{}" : metadataJson);
+        return params;
     }
 
     public List<EvalCaseRow> findCasesByDatasetId(String datasetId) {

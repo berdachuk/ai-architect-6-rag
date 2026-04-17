@@ -1,7 +1,19 @@
 openapi: 3.0.3
 info:
   title: DocuRAG REST API
-  description: Medical document RAG — Spring Boot. E2E client source of truth; keep aligned with controllers under com.berdachuk.docurag.web.rest.
+  description: |
+    Medical document RAG system — Spring Boot Modulith.
+    
+    ## Architecture Overview
+    Documents are ingested (PDF or structured JSONL/CSV), stored as source documents,
+    chunked into passages, and embedded into a pgvector store for semantic search.
+    
+    ## Typical Flow
+    1. **Ingest** documents via `POST /api/documents/ingest`
+    2. **Build index** via `POST /api/index/rebuild`
+    3. **Query** via `POST /api/rag/ask`
+    
+    E2E client source of truth — keep aligned with controllers under `com.berdachuk.docurag.web.rest`.
   version: 0.1.0
 servers:
   - url: http://localhost:8084
@@ -11,18 +23,32 @@ servers:
 
 tags:
   - name: documents
+    description: Document ingestion, storage, and catalog management
   - name: index
+    description: Index rebuild operations and status monitoring
   - name: rag
+    description: Retrieval-Augmented Generation queries and document analysis
   - name: evaluation
+    description: RAG quality evaluation against ground-truth datasets
   - name: visualizations
+    description: Chart and graph data for document analytics
   - name: actuator
+    description: Spring Boot Actuator endpoints
 
 paths:
   /api/documents/ingest:
     post:
       tags: [documents]
+      summary: Ingest documents from specified paths
+      description: |
+        Ingests documents from file paths or directories. Supports PDF files and
+        structured formats (JSONL, CSV). Documents are parsed, deduplicated by content hash,
+        and stored. For PDF files, text is extracted directly. For structured files, each
+        record is treated as a separate document. After ingestion, use /api/index/rebuild
+        to create chunks and embeddings.
       operationId: ingestDocuments
       requestBody:
+        description: Paths to files or directories to ingest
         required: false
         content:
           application/json:
@@ -30,7 +56,7 @@ paths:
               $ref: '#/components/schemas/IngestPathsRequest'
       responses:
         '200':
-          description: Ingest summary
+          description: Ingest completed — returns job summary with loaded/skipped counts
           content:
             application/json:
               schema:
@@ -39,21 +65,25 @@ paths:
   /api/documents:
     get:
       tags: [documents]
+      summary: List ingested documents
+      description: Returns a paginated list of all ingested source documents with their metadata.
       operationId: listDocuments
       parameters:
         - name: page
           in: query
+          description: Page number (zero-based)
           schema:
             type: integer
             default: 0
         - name: size
           in: query
+          description: Page size
           schema:
             type: integer
             default: 20
       responses:
         '200':
-          description: Page of document summaries
+          description: Paginated list of document summaries
           content:
             application/json:
               schema:
@@ -64,16 +94,19 @@ paths:
   /api/documents/{id}:
     get:
       tags: [documents]
+      summary: Get document by ID
+      description: Returns full document details including content for the specified document.
       operationId: getDocumentById
       parameters:
         - name: id
           in: path
           required: true
+          description: Document ID
           schema:
             type: string
       responses:
         '200':
-          description: Document detail
+          description: Full document detail including content
           content:
             application/json:
               schema:
@@ -88,10 +121,12 @@ paths:
   /api/documents/categories:
     get:
       tags: [documents]
+      summary: List all document categories
+      description: Returns a list of all distinct category values used by ingested documents.
       operationId: listDocumentCategories
       responses:
         '200':
-          description: Distinct categories
+          description: Distinct category strings
           content:
             application/json:
               schema:
@@ -102,26 +137,35 @@ paths:
   /api/index/rebuild:
     post:
       tags: [index]
+      summary: Trigger full index rebuild
+      description: |
+        Triggers a complete index rebuild: clears all existing chunks and embeddings,
+        re-chunks all source documents, and regenerates embeddings. This is an
+        asynchronous operation. Poll /api/index/status to monitor progress.
       operationId: rebuildIndex
       responses:
         '202':
-          description: Accepted
+          description: Rebuild started asynchronously
 
   /api/index/incremental:
     post:
       tags: [index]
+      summary: Incremental index update
+      description: Currently not implemented. Use /api/index/rebuild for full rebuild.
       operationId: incrementalIndex
       responses:
         '501':
-          description: Not implemented (deferred)
+          description: Not implemented
 
   /api/index/status:
     get:
       tags: [index]
+      summary: Get index and ingest status
+      description: Returns current state of the index including document/chunk counts and last ingest job info.
       operationId: getIndexStatus
       responses:
         '200':
-          description: Index and ingest job stats
+          description: Index statistics and last ingest job state
           content:
             application/json:
               schema:
@@ -130,8 +174,13 @@ paths:
   /api/rag/ask:
     post:
       tags: [rag]
+      summary: Ask a question (RAG)
+      description: |
+        Executes a Retrieval-Augmented Generation query: embeds the question,
+        retrieves top-K similar chunks, and generates an answer using the LLM.
       operationId: ragAsk
       requestBody:
+        description: Question and retrieval parameters
         required: true
         content:
           application/json:
@@ -139,13 +188,13 @@ paths:
               $ref: '#/components/schemas/RagAskRequest'
       responses:
         '200':
-          description: Answer and retrieved chunks
+          description: Answer with retrieved source chunks
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/RagAskResponse'
         '400':
-          description: Invalid request payload
+          description: Invalid request
           content:
             application/problem+json:
               schema:
@@ -154,8 +203,11 @@ paths:
   /api/rag/analyze:
     post:
       tags: [rag]
+      summary: Analyze documents (extraction)
+      description: Extracts structured information from documents using the LLM without retrieval.
       operationId: ragAnalyze
       requestBody:
+        description: Analysis parameters
         required: false
         content:
           application/json:
@@ -172,8 +224,13 @@ paths:
   /api/evaluation/run:
     post:
       tags: [evaluation]
+      summary: Run evaluation on a dataset
+      description: |
+        Runs evaluation against a built-in or custom dataset. Measures RAG quality
+        using ground-truth questions and expected answers. Returns aggregate metrics.
       operationId: runEvaluation
       requestBody:
+        description: Evaluation parameters and dataset
         required: true
         content:
           application/json:
@@ -181,19 +238,19 @@ paths:
               $ref: '#/components/schemas/EvaluationRunRequest'
       responses:
         '200':
-          description: Run finished synchronously with aggregate metrics
+          description: Evaluation run started and completed synchronously
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/EvaluationRunStartedResponse'
         '400':
-          description: Invalid request payload (missing fields or unknown dataset)
+          description: Invalid request
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetail'
         '409':
-          description: Request cannot be processed in current system state
+          description: Cannot run in current system state
           content:
             application/problem+json:
               schema:
@@ -202,10 +259,12 @@ paths:
   /api/evaluation/runs:
     get:
       tags: [evaluation]
+      summary: List all evaluation runs
+      description: Returns summaries of all past evaluation runs.
       operationId: listEvaluationRuns
       responses:
         '200':
-          description: All run summaries
+          description: List of evaluation run summaries
           content:
             application/json:
               schema:
@@ -216,44 +275,51 @@ paths:
   /api/evaluation/runs/{id}:
     get:
       tags: [evaluation]
+      summary: Get evaluation run by ID
+      description: Returns detailed results for a specific evaluation run including per-case metrics.
       operationId: getEvaluationRun
       parameters:
         - name: id
           in: path
           required: true
+          description: Run ID
           schema:
             type: string
       responses:
         '200':
-          description: Run detail with per-case rows
+          description: Detailed run results with per-case rows
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/EvaluationRunDetail'
         '404':
-          description: Not found
+          description: Run not found
 
   /api/evaluation/latest:
     get:
       tags: [evaluation]
+      summary: Get latest evaluation run
+      description: Returns the most recent evaluation run details.
       operationId: getLatestEvaluation
       responses:
         '200':
-          description: Latest run detail
+          description: Latest evaluation run detail
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/EvaluationRunDetail'
         '404':
-          description: No runs yet
+          description: No runs exist yet
 
   /api/visualizations/categories/pie:
     get:
       tags: [visualizations]
+      summary: Get document categories pie chart data
+      description: Returns aggregated category distribution as pie chart data.
       operationId: getCategoriesPie
       responses:
         '200':
-          description: Pie chart data
+          description: Pie chart slices for document categories
           content:
             application/json:
               schema:
@@ -262,10 +328,12 @@ paths:
   /api/visualizations/entities/graph:
     get:
       tags: [visualizations]
+      summary: Get entity relationship graph data
+      description: Returns nodes and edges representing extracted entities and their relationships.
       operationId: getEntitiesGraph
       responses:
         '200':
-          description: Entity graph data
+          description: Graph visualization data
           content:
             application/json:
               schema:
@@ -274,10 +342,12 @@ paths:
   /actuator/health:
     get:
       tags: [actuator]
+      summary: Application health check
+      description: Standard Spring Boot Actuator health endpoint.
       operationId: getHealth
       responses:
         '200':
-          description: Spring Boot health (shape varies by version)
+          description: Health status
           content:
             application/json:
               schema:
