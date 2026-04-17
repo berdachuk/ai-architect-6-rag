@@ -10,14 +10,14 @@ spring:
     custom:
       chat:
         # Default: local Ollama OpenAI-compatible API. Override with CHAT_BASE_URL or shared OLLAMA_BASE_URL.
-        base-url: ${CHAT_BASE_URL:${OLLAMA_BASE_URL:http://localhost:11434/v1}}
+        base-url: ${CHAT_BASE_URL:${OLLAMA_BASE_URL:http://localhost:11434}}
         api-key: ${CHAT_API_KEY:}
-        model: ${CHAT_MODEL:gemma4:31b-cloud}
+        model: ${CHAT_MODEL:gemma4:e4b}
         temperature: 0.7
         max-tokens: 2048
       embedding:
         provider: ${EMBEDDING_PROVIDER:openai}
-        base-url: ${EMBEDDING_BASE_URL:${OLLAMA_BASE_URL:http://localhost:11434/v1}}
+        base-url: ${EMBEDDING_BASE_URL:${OLLAMA_BASE_URL:http://localhost:11434}}
         api-key: ${EMBEDDING_API_KEY:}
         model: ${EMBEDDING_MODEL:nomic-embed-text}
         dimensions: ${EMBEDDING_DIMENSIONS:768}
@@ -31,8 +31,15 @@ spring:
       - org.springframework.ai.model.openai.autoconfigure.OpenAiModerationAutoConfiguration
   thymeleaf:
     cache: false
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 2GB
   flyway:
     enabled: true
+
+server:
+  port: ${SERVER_PORT:8084}
 
 management:
   endpoints:

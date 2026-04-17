@@ -16,10 +16,11 @@
 **/cucumber-reports/
 
 # Local sample data (downloaded/prepared from Hugging Face / PDFs)
-docu-rag/data/_hf/
-docu-rag/data/corpus/_sample/
-docu-rag/data/corpus/subset-manifest.json
-docu-rag/data/pdf-demo/manifest.json
-docu-rag/data/pdf-demo/*.pdf
-docu-rag/data/pdf-demo/**/*.pdf
+data/_hf/
+data/corpus/_sample/
+data/corpus/medical-rag-corpus.full.jsonl
+data/corpus/subset-manifest.json
+data/pdf-demo/manifest.json
+data/pdf-demo/*.pdf
+data/pdf-demo/**/*.pdf
 /.env

@@ -12,6 +12,8 @@ public record EvaluationRunSummary(
         String embeddingModelName,
         BigDecimal normalizedAccuracy,
         BigDecimal meanSemanticSimilarity,
+        BigDecimal semanticAccuracy,
+        BigDecimal semanticPassThreshold,
         BigDecimal semanticAccuracyAt080
 ) {
 }

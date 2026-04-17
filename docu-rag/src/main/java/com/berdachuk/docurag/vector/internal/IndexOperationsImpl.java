@@ -20,12 +20,28 @@ public class IndexOperationsImpl implements IndexOperationsApi {
     private final ChunkingApi chunkingApi;
     private final EmbeddingIndexerApi embeddingIndexerApi;
     private final NamedParameterJdbcTemplate jdbc;
+    private final IndexingProgressTracker progressTracker;
 
     @Override
     @Transactional
     public void rebuildFullIndex() {
+        progressTracker.markChunkingPhase();
         chunkingApi.rebuildAllChunks();
         embeddingIndexerApi.embedAllMissing();
+    }
+
+    @Override
+    @Transactional
+    public int clearEmbeddings() {
+        Integer updated = jdbc.update("UPDATE document_chunk SET embedding = NULL WHERE embedding IS NOT NULL", Map.of());
+        return updated == null ? 0 : updated;
+    }
+
+    @Override
+    @Transactional
+    public int clearChunks() {
+        Integer deleted = jdbc.update("DELETE FROM source_document", Map.of());
+        return deleted == null ? 0 : deleted;
     }
 
     @Override

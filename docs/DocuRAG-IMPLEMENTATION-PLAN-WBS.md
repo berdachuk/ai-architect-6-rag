@@ -99,7 +99,7 @@ DocuRAG Implementation
 
 | WBS | Work package | Primary module(s) | Depends on | Deliverable / verification |
 |-----|----------------|-------------------|------------|----------------------------|
-| 2.1 | HF manifest + fixtures + **PDF demo catalog** | `docs/`, `docu-rag/src/.../resources/`, **`docu-rag/data/pdf-demo/`** | — | [DocuRAG-Datasets.md](DocuRAG-Datasets.md) + **`docu-rag/data/pdf-demo/README.md`**; sample JSONL/fixtures as needed |
+| 2.1 | HF manifest + fixtures + **PDF demo catalog** | `docs/`, `docu-rag/src/.../resources/`, **`data/pdf-demo/`** | — | [DocuRAG-Datasets.md](DocuRAG-Datasets.md) + **`data/pdf-demo/README.md`**; sample JSONL/fixtures as needed |
 | 2.2 | Ingest: **structured parser + PDFBox**, dedupe, `source_document` | `documents` | 1.3, 1.4 | US-01; **`source_format`**; API + optional UI |
 | 2.3 | Chunking service + rows | `chunking` | 2.2 | US-06 (chunk leg); stats logged |
 | 2.4 | Embed + write `document_chunk.embedding` | `vector` | 1.5, 2.3 | US-06; batch + retry |
@@ -150,7 +150,7 @@ DocuRAG Implementation
 |-----|----------------|-------------------|------------|----------------------------|
 | 6.1 | `DocuRagFullFlowIT` | `test` | 2.x–5.x | NFR-7; Docker + mocks |
 | 6.2 | Repository / slice IT (if gaps) | `test` | varies | Coverage of pgvector SQL |
-| 6.3 | README complete | repo | all | HF URL, **PDF demo** + [DocuRAG-Datasets.md](DocuRAG-Datasets.md) / `docu-rag/data/pdf-demo/`, eval, Ollama, WSL |
+| 6.3 | README complete | repo | all | HF URL, **PDF demo** + [DocuRAG-Datasets.md](DocuRAG-Datasets.md) / `data/pdf-demo/`, eval, Ollama, WSL |
 | 6.4 | Screenshots + submission | repo | all | PRD deliverables |
 | 6.5 | Demo rehearsal, defect sweep | team | 6.1–6.4 | Checklist §7 |
 | **6.6** | **E2E module (optional)** — API + UI against live server | `docu-rag-e2e` (new sibling Maven module) | 3.x–5.x stable | `mvn test` with base URL props; see **E2E subsection** below |
@@ -216,7 +216,7 @@ flowchart LR
 - [x] `mvn verify` green with Docker (Modulith + IT + mocks) — reactor: `mvn -f docu-rag-parent/pom.xml verify`; CI: [`.github/workflows/docu-rag-verify.yml`](https://github.com/berdachuk/ai-architect-6-rag/blob/main/.github/workflows/docu-rag-verify.yml).
 - [x] All **required** pages: `/`, `/qa`, `/analysis`, `/documents`, `/evaluation` (covered by app + `docu-rag-e2e` UI/API flows).
 - [x] **Disclaimer** on interactive pages (NFR-5).
-- [x] **Hugging Face** corpus link in README + subset manifest in repo ([`docu-rag/data/corpus/subset-manifest.example.json`](https://github.com/berdachuk/ai-architect-6-rag/blob/main/docu-rag/data/corpus/subset-manifest.example.json)); **supplementary PDF demo** described ([`docu-rag/data/pdf-demo/README.md`](https://github.com/berdachuk/ai-architect-6-rag/blob/main/docu-rag/data/pdf-demo/README.md) and [DocuRAG-Datasets.md](DocuRAG-Datasets.md); primary vs PDF wording in README).
+- [x] **Hugging Face** corpus link in README + subset manifest in repo ([`data/corpus/subset-manifest.example.json`](https://github.com/berdachuk/ai-architect-6-rag/blob/main/data/corpus/subset-manifest.example.json)); **supplementary PDF demo** described ([`data/pdf-demo/README.md`](https://github.com/berdachuk/ai-architect-6-rag/blob/main/data/pdf-demo/README.md) and [DocuRAG-Datasets.md](DocuRAG-Datasets.md); primary vs PDF wording in README).
 - [x] **PDF ingestion** verified — `PdfTextExtractorTest` + `DocuRagFullFlowIT.pdfIngestRebuildAndIndexStatus` ([`docu-rag/src/test/resources/fixtures/tiny.pdf`](https://github.com/berdachuk/ai-architect-6-rag/blob/main/docu-rag/src/test/resources/fixtures/tiny.pdf)).
 - [x] **≥1 eval metric** demonstrated (UI or API + small dataset; seeded `medical-rag-eval-v1`, FullFlowIT + E2E).
 - [ ] **Screenshots** for QA, chart, graph, evaluation — add under [`docs/submission/screenshots/`](https://github.com/berdachuk/ai-architect-6-rag/tree/main/docs/submission/screenshots) per [`docs/submission/README.md`](submission/README.md).

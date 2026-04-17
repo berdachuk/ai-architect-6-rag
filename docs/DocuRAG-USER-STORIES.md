@@ -72,7 +72,7 @@ Agile-style **user stories** for DocuRAG, aligned with [DocuRAG-PRD.md](DocuRAG-
 
 **Acceptance criteria**
 
-- **`docu-rag/data/pdf-demo/README.md`** explains primary vs supplementary corpus, lists **example sources** (e.g. EU public health PDFs), and states that operators download files locally when binaries are not committed.
+- **`data/pdf-demo/README.md`** explains primary vs supplementary corpus, lists **example sources** (e.g. EU public health PDFs), and states that operators download files locally when binaries are not committed.
 - Top-level / module README repeats the **two-sentence** positioning: primary HF corpus + supplementary PDF demo (per PRD).
 
 **Maps to:** UC-01b, FR-1 (documentation deliverable)

@@ -10,15 +10,28 @@
         main { padding: 1.5rem; max-width: 960px; margin: 0 auto; }
         .disclaimer { background: #fff3cd; border: 1px solid #ffc107; padding: 0.75rem 1rem; margin: 1rem 1.5rem; border-radius: 6px; font-size: 0.9rem; }
         .card { background: #fff; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
+        .actions { display: flex; gap: 0.75rem; margin-bottom: 1rem; }
+        .danger { background: #b42318; color: #fff; border: 0; border-radius: 6px; padding: 0.65rem 1rem; cursor: pointer; }
+        .danger:hover { background: #912018; }
         #pieChart { max-width: 420px; }
         #entityGraph { height: 420px; border: 1px solid #ddd; background: #fff; }
     </style>
 </head>
 <body>
 <div th:replace="~{fragments/common :: nav}"></div>
-<div th:replace="~{fragments/disclaimer :: disclaimer}"></div>
 <main>
     <h1>Analysis</h1>
+    <div class="card">
+        <h2>Maintenance</h2>
+        <div class="actions">
+            <form method="post" th:action="@{/analysis/clear-old-data}">
+                <button class="danger" type="submit">Delete old data</button>
+            </form>
+        </div>
+        <p th:if="${analysisActionMessage != null}">
+            <strong th:text="${analysisActionMessage}">Analysis action status</strong>
+        </p>
+    </div>
     <div class="card">
         <h2>Categories</h2>
         <canvas id="pieChart"></canvas>

@@ -6,7 +6,7 @@
     <envs>
       <!-- Uses application-e2e.yml: server.port=18080, datasource localhost:5433, stub AI beans -->
       <env name="SPRING_PROFILES_ACTIVE" value="e2e" />
-      <env name="DOCURAG_CORPUS_PATH" value="$PROJECT_DIR$/docu-rag/data/corpus/_sample/medical-rag-corpus.sample.500.jsonl" />
+      <env name="DOCURAG_CORPUS_PATH" value="$PROJECT_DIR$/data/corpus/_sample/medical-rag-corpus.sample.500.jsonl" />
     </envs>
     <method v="2">
       <option name="Make" enabled="true" />

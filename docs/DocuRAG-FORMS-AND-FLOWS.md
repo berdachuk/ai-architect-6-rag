@@ -2,6 +2,8 @@
 
 Specification of **Thymeleaf forms**, **page navigation**, and **end-to-end flows** (UI + REST + background steps). Aligned with [DocuRAG-PRD.md](DocuRAG-PRD.md) and [DocuRAG-USE-CASES.md](DocuRAG-USE-CASES.md).
 
+For screen-level layout, visible labels, and empty/error states, keep this document aligned with the text wireframes in [DocuRAG-WIREFRAMES.md](DocuRAG-WIREFRAMES.md).
+
 **Global UI rules (PRD):**
 
 - Forms use **HTTP POST** and **server re-render** with results (no SPA).
@@ -307,6 +309,7 @@ All listed pages include **disclaimer** and links back to dashboard where useful
 |----------|---------|
 | Forms F-02, F-05 | [DocuRAG-PRD.md](DocuRAG-PRD.md) — Example JSON for `/api/rag/ask`, `/api/evaluation/run` |
 | Flows A–D | [DocuRAG-USE-CASES.md](DocuRAG-USE-CASES.md) — UC-01, UC-06, UC-09–11, UC-15 |
+| UI page forms and states | [DocuRAG-WIREFRAMES.md](DocuRAG-WIREFRAMES.md) — text wireframes for `/`, `/qa`, `/documents`, `/analysis`, `/evaluation` |
 | Modules | PRD — System Architecture (retrieval vs llm) |
 
 ---

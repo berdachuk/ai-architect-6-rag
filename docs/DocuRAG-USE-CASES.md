@@ -61,7 +61,7 @@ This document lists **all product use cases** derived from [DocuRAG-PRD.md](Docu
 | **Goal** | Load **5–15 open English medical PDFs** (public guidelines / health-authority documents) from a configured directory to demonstrate **raw PDF ingestion** alongside the primary Hugging Face corpus. |
 | **Actor** | Operator |
 | **Trigger** | Same as UC-01 (`POST /api/documents/ingest` with PDF path / mode, or separate documented property such as `docurag.ingestion.pdf-demo-path`) |
-| **Preconditions** | PDFs downloaded per **`docu-rag/data/pdf-demo/README.md`**; DB reachable |
+| **Preconditions** | PDFs downloaded per **`data/pdf-demo/README.md`**; DB reachable |
 | **Main flow** | 1) Discover **`.pdf`** files. 2) Extract text (**PDFBox**). 3) Set **`source_format`** = `pdf`, **`external_id`** / **`source_url`** from file name or manifest. 4) Skip duplicates (hash). 5) Persist **`source_document`**. |
 | **Postconditions** | PDF-derived documents available for chunking and indexing |
 | **FR** | FR-1 |

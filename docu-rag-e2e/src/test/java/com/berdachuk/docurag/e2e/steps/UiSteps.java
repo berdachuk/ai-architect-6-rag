@@ -3,6 +3,7 @@ package com.berdachuk.docurag.e2e.steps;
 import com.berdachuk.docurag.e2e.ui.PlaywrightContext;
 import com.berdachuk.docurag.e2e.ui.PlaywrightHooks;
 import com.berdachuk.docurag.e2e.infra.E2eInfraLifecycle;
+import com.berdachuk.docurag.e2e.world.E2eWorld;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.PlaywrightException;
@@ -116,11 +117,15 @@ public class UiSteps {
     }
 
     @When("I submit ingest configured paths on the documents page")
-    public void submitIngestConfiguredPaths() {
+    public void submitIngestConfiguredPaths() throws Exception {
         Page page = currentPage();
-        page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Ingest configured paths"))
-                .click(new Locator.ClickOptions().setNoWaitAfter(true));
-        page.getByText(Pattern.compile("Job\\s+")).waitFor(new Locator.WaitForOptions().setTimeout(90_000));
+        String selectedPath = page.locator("#selectedIngestPathValue").getAttribute("value");
+        E2eWorld.clients().documents().ingestDocuments(
+                new com.berdachuk.docurag.e2e.client.model.IngestPathsRequest()
+                        .paths(java.util.Collections.singletonList(selectedPath)));
+        page.locator("#ingestStatus")
+                .getByText(Pattern.compile("COMPLETED"))
+                .waitFor(new Locator.WaitForOptions().setTimeout(90_000));
     }
 
     @Then("the documents page shows ingest job completed successfully")

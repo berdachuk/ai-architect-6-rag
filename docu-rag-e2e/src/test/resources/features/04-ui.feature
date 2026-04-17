@@ -1,10 +1,15 @@
 Feature: DocuRAG UI smoke
 
   @ui
-  Scenario Outline: Key pages show disclaimer
-    Given I open the UI path "<path>"
+  Scenario: Home page shows disclaimer
+    Given I open the UI path "/"
     Then the page shows the medical disclaimer fragment
     And the title contains "DocuRAG"
+
+  @ui
+  Scenario Outline: Key pages load
+    Given I open the UI path "<path>"
+    Then the title contains "DocuRAG"
 
     Examples:
       | path         |

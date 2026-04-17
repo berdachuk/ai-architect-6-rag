@@ -8,6 +8,7 @@ import com.berdachuk.docurag.core.config.DocuRagProperties;
 import com.berdachuk.docurag.core.util.IdGenerator;
 import com.berdachuk.docurag.evaluation.api.EvaluationApi;
 import com.berdachuk.docurag.evaluation.api.EvaluationCaseResult;
+import com.berdachuk.docurag.evaluation.api.EvaluationLogSnapshot;
 import com.berdachuk.docurag.evaluation.api.EvaluationRunDetail;
 import com.berdachuk.docurag.evaluation.api.EvaluationRunRequest;
 import com.berdachuk.docurag.evaluation.api.EvaluationRunStartedResponse;
@@ -19,7 +20,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -39,10 +39,14 @@ public class EvaluationServiceImpl implements EvaluationApi {
     private final CustomChatProperties chatProperties;
     private final CustomEmbeddingProperties embeddingProperties;
     private final ObjectMapper objectMapper;
+    private final EvaluationSampleDatasetSeeder datasetSeeder;
+    private final EvaluationProgressTracker progressTracker;
 
     @Override
-    @Transactional
     public EvaluationRunStartedResponse run(EvaluationRunRequest request) {
+        validateRequest(request);
+        String datasetName = request.datasetName();
+        datasetSeeder.ensureDatasetSeeded(request.datasetName());
         String datasetId = repository.findDatasetIdByName(request.datasetName())
                 .orElseThrow(() -> new IllegalArgumentException("Unknown dataset: " + request.datasetName()));
         List<EvaluationJdbcRepository.EvalCaseRow> cases = repository.findCasesByDatasetId(datasetId);
@@ -54,48 +58,102 @@ public class EvaluationServiceImpl implements EvaluationApi {
         double semTh = request.semanticPassThreshold() != null ? request.semanticPassThreshold() : 0.80;
 
         String runId = IdGenerator.generateId();
+        int n = cases.size();
+        progressTracker.start(runId, datasetName, n);
+        progressTracker.log("Using topK=" + topK + ", minScore=" + minScore + ", semanticPassThreshold=" + semTh + ".");
+        progressTracker.log("Chat model=" + chatProperties.getModel() + ", embedding model=" + embeddingProperties.getModel() + ".");
         OffsetDateTime started = OffsetDateTime.now();
-        repository.insertRun(runId, datasetId, started, chatProperties.getModel(), embeddingProperties.getModel());
+        repository.insertRun(runId, datasetId, started, chatProperties.getModel(), embeddingProperties.getModel(), semTh);
 
         int normHits = 0;
         double semSum = 0;
+        int semPassAt080 = 0;
         int semPass = 0;
-        for (EvaluationJdbcRepository.EvalCaseRow c : cases) {
-            RagAskResponse rag = ragAskApi.ask(new RagAskRequest(c.question(), topK, minScore));
-            String pred = rag.answer() == null ? "" : rag.answer().trim();
-            String gt = c.groundTruth() == null ? "" : c.groundTruth().trim();
-            boolean exact = pred.equalsIgnoreCase(gt);
-            boolean norm = TextNormalization.normalize(pred).equals(TextNormalization.normalize(gt));
-            if (norm) {
-                normHits++;
-            }
-            float[] ev = embeddingModel.embed(new Document(pred));
-            float[] gv = embeddingModel.embed(new Document(gt));
-            double cos = VectorMath.cosineSimilarity(ev, gv);
-            semSum += cos;
-            boolean pass = cos >= semTh;
-            if (pass) {
-                semPass++;
-            }
-            String chunksJson = toJson(rag);
-            repository.insertResult(
-                    IdGenerator.generateId(),
-                    runId,
-                    c.id(),
-                    pred,
-                    exact,
-                    norm,
-                    cos,
-                    pass,
+        try {
+            int caseNumber = 0;
+            for (EvaluationJdbcRepository.EvalCaseRow c : cases) {
+                ensureNotTerminated();
+                caseNumber++;
+                progressTracker.log("Case " + caseNumber + "/" + n + ": asking " + preview(c.question()));
+                RagAskResponse rag = ragAskApi.ask(new RagAskRequest(c.question(), topK, minScore));
+                ensureNotTerminated();
+                String pred = rag.answer() == null ? "" : rag.answer().trim();
+                String gt = c.groundTruth() == null ? "" : c.groundTruth().trim();
+                boolean exact = pred.equalsIgnoreCase(gt);
+                boolean norm = TextNormalization.normalize(pred).equals(TextNormalization.normalize(gt));
+                if (norm) {
+                    normHits++;
+                }
+                progressTracker.log("Case " + caseNumber + "/" + n + ": scoring answer.");
+                float[] ev = embeddingModel.embed(new Document(pred));
+                ensureNotTerminated();
+                float[] gv = embeddingModel.embed(new Document(gt));
+                ensureNotTerminated();
+                double cos = VectorMath.cosineSimilarity(ev, gv);
+                semSum += cos;
+                if (cos >= 0.80) {
+                    semPassAt080++;
+                }
+                boolean pass = cos >= semTh;
+                if (pass) {
+                    semPass++;
+                }
+                String chunksJson = toJson(rag);
+                repository.insertResult(
+                        IdGenerator.generateId(),
+                        runId,
+                        c.id(),
+                        pred,
+                        exact,
+                        norm,
+                        cos,
+                        pass,
                     chunksJson
+                );
+                progressTracker.log("Case " + caseNumber + "/" + n + ": semantic similarity=" + round4(cos) + ", pass=" + pass + ".");
+            }
+            ensureNotTerminated();
+            double normAcc = n == 0 ? 0 : (double) normHits / n;
+            double meanSem = n == 0 ? 0 : semSum / n;
+            double semAtThreshold = n == 0 ? 0 : (double) semPass / n;
+            double sem080 = n == 0 ? 0 : (double) semPassAt080 / n;
+            progressTracker.log("Writing evaluation summary.");
+            repository.finishRun(runId, OffsetDateTime.now(), normAcc, meanSem, semAtThreshold, sem080);
+            progressTracker.finish(runId);
+            return new EvaluationRunStartedResponse(
+                    runId,
+                    n,
+                    round4(normAcc),
+                    round4(meanSem),
+                    round4(semAtThreshold),
+                    round4(semTh),
+                    round4(sem080)
             );
+        } catch (RuntimeException ex) {
+            if (progressTracker.terminationRequested()) {
+                progressTracker.terminated(runId);
+                Thread.interrupted();
+                throw new IllegalStateException("Evaluation terminated by user.", ex);
+            }
+            progressTracker.fail(runId, ex.getMessage() == null ? ex.getClass().getSimpleName() : ex.getMessage());
+            throw ex;
         }
-        int n = cases.size();
-        double normAcc = n == 0 ? 0 : (double) normHits / n;
-        double meanSem = n == 0 ? 0 : semSum / n;
-        double sem080 = n == 0 ? 0 : (double) semPass / n;
-        repository.finishRun(runId, OffsetDateTime.now(), normAcc, meanSem, sem080);
-        return new EvaluationRunStartedResponse(runId, n, round4(normAcc), round4(meanSem), round4(sem080));
+    }
+
+    private static void validateRequest(EvaluationRunRequest request) {
+        if (request.datasetName() == null || request.datasetName().isBlank()) {
+            throw new IllegalArgumentException("datasetName is required");
+        }
+        if (request.topK() != null && request.topK() <= 0) {
+            throw new IllegalArgumentException("topK must be > 0");
+        }
+        if (request.minScore() != null && (request.minScore() < 0.0 || request.minScore() > 1.0)) {
+            throw new IllegalArgumentException("minScore must be between 0.0 and 1.0");
+        }
+        if (request.semanticPassThreshold() != null
+            && (request.semanticPassThreshold() < 0.0 || request.semanticPassThreshold() > 1.0)) {
+            throw new IllegalArgumentException("semanticPassThreshold must be between 0.0 and 1.0");
+        }
     }
 
     private String toJson(RagAskResponse rag) {
@@ -130,6 +188,24 @@ public class EvaluationServiceImpl implements EvaluationApi {
         return Optional.of(new EvaluationRunDetail(toSummary(row), mapResults(row.id())));
     }
 
+    @Override
+    public int clearRuns() {
+        int deleted = repository.deleteRuns();
+        progressTracker.clear();
+        progressTracker.log("Deleted " + deleted + " evaluation run(s) and associated result rows.");
+        return deleted;
+    }
+
+    @Override
+    public EvaluationLogSnapshot logs() {
+        return progressTracker.snapshot();
+    }
+
+    @Override
+    public boolean terminateRunningEvaluation() {
+        return progressTracker.requestTermination();
+    }
+
     private List<EvaluationCaseResult> mapResults(String runId) {
         List<EvaluationCaseResult> out = new ArrayList<>();
         for (EvaluationJdbcRepository.ResultRow r : repository.findResultsForRun(runId)) {
@@ -157,7 +233,23 @@ public class EvaluationServiceImpl implements EvaluationApi {
                 row.embeddingModelName(),
                 row.normalizedAccuracy(),
                 row.meanSemanticSimilarity(),
+                row.semanticAccuracy(),
+                row.semanticPassThreshold(),
                 row.semanticAccuracyAt080()
         );
+    }
+
+    private static String preview(String text) {
+        if (text == null || text.isBlank()) {
+            return "(empty question)";
+        }
+        String compact = text.replaceAll("\\s+", " ").trim();
+        return compact.length() <= 120 ? compact : compact.substring(0, 117) + "...";
+    }
+
+    private void ensureNotTerminated() {
+        if (progressTracker.terminationRequested()) {
+            throw new IllegalStateException("Evaluation terminated by user.");
+        }
     }
 }

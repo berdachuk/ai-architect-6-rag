@@ -12,4 +12,10 @@ public interface EvaluationApi {
     Optional<EvaluationRunDetail> getRun(String runId);
 
     Optional<EvaluationRunDetail> getLatestRun();
+
+    int clearRuns();
+
+    EvaluationLogSnapshot logs();
+
+    boolean terminateRunningEvaluation();
 }

@@ -11,19 +11,107 @@
         th, td { border: 1px solid #ddd; padding: 0.5rem 0.75rem; text-align: left; }
         th { background: #eef2f7; }
         button { background: #1e3a5f; color: #fff; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
+        .danger { background: #7f1d1d; }
+        .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem; }
         .card { background: #fff; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
+        .path-row { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .75rem; align-items: center; }
+        .path-input { min-width: 420px; flex: 1 1 420px; padding: .5rem .65rem; border-radius: 4px; border: 1px solid #cbd5e1; }
+        .secondary { background: #334155; }
+        .progress-track { width: 100%; height: 12px; background: #e5e7eb; border-radius: 999px; overflow: hidden; }
+        .progress-fill { height: 100%; width: 0; background: linear-gradient(90deg, #0ea5e9, #16a34a); transition: width .35s ease; }
+        .muted { color: #4b5563; font-size: .9rem; }
+        .ingest-files { margin-top: 1rem; border-top: 1px solid #dbe3ed; padding-top: .75rem; }
+        .ingest-files h3 { margin: 0 0 .5rem; font-size: 1rem; }
+        .ingest-file-list { list-style: none; padding: 0; margin: .75rem 0 0; display: grid; gap: .5rem; max-height: 260px; overflow: auto; }
+        .ingest-file { border: 1px solid #dbe3ed; border-radius: 6px; padding: .55rem .65rem; background: #f8fafc; }
+        .ingest-file-main { display: flex; justify-content: space-between; gap: .75rem; align-items: baseline; }
+        .ingest-file-name { font-weight: 700; overflow-wrap: anywhere; }
+        .ingest-file-status { font-size: .8rem; color: #172033; background: #dbeafe; border-radius: 6px; padding: .15rem .4rem; white-space: nowrap; }
+        .ingest-file-path { overflow-wrap: anywhere; margin-top: .25rem; }
+        .ingest-file-progress { margin-top: .45rem; }
+        .ingest-file-progress .progress-track { height: 8px; }
+        .ingest-file-progress-meta { display: flex; justify-content: space-between; gap: .75rem; margin: .25rem 0 0; }
+        .folder-picker { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #dbe3ed; }
+        .folder-picker[hidden] { display: none; }
+        .folder-picker-header { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+        .folder-current { overflow-wrap: anywhere; }
+        .folder-list { display: grid; gap: .4rem; margin-top: .75rem; max-height: 300px; overflow: auto; }
+        .folder-item { display: flex; justify-content: flex-start; width: 100%; background: #eef2f7; color: #172033; border: 1px solid #cbd5e1; text-align: left; }
+        .folder-item:hover { background: #dbeafe; }
+        .folder-list-title { margin: 1rem 0 .25rem; font-weight: 700; }
     </style>
 </head>
 <body>
 <div th:replace="~{fragments/common :: nav}"></div>
-<div th:replace="~{fragments/disclaimer :: disclaimer}"></div>
 <main>
     <h1>Documents</h1>
     <div class="card">
+        <h2 style="margin-top:0;">Realtime indexing progress</h2>
+        <p><strong id="progressPercent"
+                   th:text="${indexStatus.chunkCount() > 0 ? T(java.lang.Math).round((indexStatus.embeddedChunkCount() * 100.0) / indexStatus.chunkCount()) : 0} + '%'">0%</strong></p>
+        <div class="progress-track" aria-label="Indexing progress">
+            <div id="progressFill"
+                 class="progress-fill"
+                 th:style="'width:' + (${indexStatus.chunkCount() > 0 ? T(java.lang.Math).round((indexStatus.embeddedChunkCount() * 100.0) / indexStatus.chunkCount()) : 0}) + '%'"></div>
+        </div>
+        <p class="muted" style="margin-top:.5rem;">
+            Embedded chunks: <span id="embeddedCount" th:text="${indexStatus.embeddedChunkCount()}">0</span> /
+            <span id="chunkCount" th:text="${indexStatus.chunkCount()}">0</span>
+        </p>
+        <p class="muted">
+            Last ingest status: <span id="ingestStatus" th:text="${indexStatus.lastIngestStatus() ?: '—'}">—</span>,
+            job: <code id="ingestJobId" th:text="${indexStatus.lastIngestJobId() ?: '—'}">—</code>
+        </p>
+        <p class="muted">Auto-refresh: every 2 seconds.</p>
+        <p class="muted" id="progressMessage">—</p>
+        <div id="ingestFilesPanel" class="ingest-files" hidden>
+            <h3>Files in this run</h3>
+            <p class="muted" id="ingestFilesSummary">Waiting for the first file.</p>
+            <ul id="ingestFileList" class="ingest-file-list"></ul>
+        </div>
+    </div>
+    <div class="card">
         <p>Total: <span th:text="${total}">0</span></p>
-        <form method="post" th:action="@{/documents/ingest}">
-            <button type="submit">Ingest configured paths</button>
-        </form>
+        <div class="path-row">
+            <button class="secondary" id="openFolderDialogBtn" type="button">Choose data folder</button>
+            <input id="selectedIngestPathHidden"
+                   class="path-input"
+                   type="text"
+                   name="selectedIngestPath"
+                   th:value="${selectedIngestPath}"
+                   placeholder="/path/to/data"/>
+            <input id="selectedIngestPathValue" type="hidden" th:value="${selectedIngestPath}"/>
+        </div>
+        <div class="actions">
+            <form method="post" th:action="@{/documents/index/clear-chunks}">
+                <input type="hidden" name="page" th:value="${page}"/>
+                <button class="danger" type="submit">Full cleanup (remove all docs + chunks)</button>
+            </form>
+            <button id="startIngestBtn" type="button">Start ingest</button>
+            <form id="stopIngestForm" method="post" th:action="@{/documents/stop}" style="display:none;">
+                <button id="stopIngestBtn" type="submit">Stop ingest</button>
+            </form>
+        </div>
+        <div id="folderPicker" class="folder-picker" hidden>
+            <div class="folder-picker-header">
+                <strong>Choose data folder</strong>
+                <button class="secondary" id="closeFolderPickerBtn" type="button">Close</button>
+            </div>
+            <p class="muted folder-current">Current: <code id="folderPickerCurrent">-</code></p>
+            <div class="actions">
+                <button id="selectCurrentFolderBtn" type="button">Use this folder</button>
+                <button class="secondary" id="goParentFolderBtn" type="button">Up</button>
+            </div>
+            <p class="folder-list-title">Roots</p>
+            <div id="folderRootList" class="folder-list"></div>
+            <p class="folder-list-title">Folders</p>
+            <div id="folderDirectoryList" class="folder-list"></div>
+            <p id="folderPickerMessage" class="muted"></p>
+        </div>
+        
+        <p th:if="${indexActionMessage != null}">
+            <strong th:text="${indexActionMessage}">Index action status</strong>
+        </p>
         <p th:if="${ingestSummary != null}">
             Job <span th:text="${ingestSummary.jobId()}"></span>:
             <span th:text="${ingestSummary.status()}"></span>,
@@ -55,5 +143,344 @@
         <a th:href="@{/documents(page=${page + 1})}" th:if="${(page + 1) * 25 < total}">Next</a>
     </p>
 </main>
+<script>
+    (function () {
+        let wasRunning = false;
+
+        function handleIngestClick() {
+            const path = document.getElementById('selectedIngestPathHidden').value;
+            if (!path || path === '/path/to/data') {
+                alert('Please select a data folder first using "Choose data folder"');
+                return;
+            }
+            const form = document.createElement('form');
+            form.method = 'post';
+            form.action = '/documents/ingest-path';
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'ingestPath';
+            input.value = path;
+            form.appendChild(input);
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        function toPercent(embedded, chunks) {
+            if (!Number.isFinite(embedded) || !Number.isFinite(chunks) || chunks <= 0) {
+                return 0;
+            }
+            return Math.min(100, Math.max(0, Math.round((embedded * 100) / chunks)));
+        }
+
+        function validPercent(value) {
+            const percent = Number(value);
+            if (!Number.isFinite(percent)) {
+                return null;
+            }
+            return Math.min(100, Math.max(0, Math.round(percent)));
+        }
+
+        function latestStructuredFile(progress) {
+            const files = progress && Array.isArray(progress.ingestFiles) ? progress.ingestFiles : [];
+            for (let i = files.length - 1; i >= 0; i--) {
+                if (validPercent(files[i].processedPercent) !== null) {
+                    return files[i];
+                }
+            }
+            return null;
+        }
+
+        function renderMainProgress(percent) {
+            const bounded = validPercent(percent) || 0;
+            document.getElementById('progressPercent').textContent = bounded + '%';
+            document.getElementById('progressFill').style.width = bounded + '%';
+        }
+
+        function renderIngestFiles(progress) {
+            const panel = document.getElementById('ingestFilesPanel');
+            const summary = document.getElementById('ingestFilesSummary');
+            const list = document.getElementById('ingestFileList');
+            if (!panel || !summary || !list) {
+                return;
+            }
+            const files = progress && Array.isArray(progress.ingestFiles) ? progress.ingestFiles : [];
+            const shouldShow = Boolean(progress && (progress.running || files.length > 0 || progress.phase === 'COMPLETED'));
+            panel.hidden = !shouldShow;
+            if (!shouldShow) {
+                list.innerHTML = '';
+                return;
+            }
+
+            const loaded = files.reduce(function (sum, file) {
+                return sum + Number(file.documentsLoaded || 0);
+            }, 0);
+            const skipped = files.reduce(function (sum, file) {
+                return sum + Number(file.documentsSkipped || 0);
+            }, 0);
+            const activeFile = latestStructuredFile(progress);
+            const activePercent = activeFile ? validPercent(activeFile.processedPercent) : null;
+            summary.textContent = files.length === 0
+                ? 'Ingest started. Waiting for the first file.'
+                : files.length + ' file(s), loaded ' + loaded + ' document(s), skipped ' + skipped + ' record(s).'
+                    + (activePercent === null ? '' : ' Current JSONL progress: ' + activePercent + '%.');
+
+            list.innerHTML = '';
+            files.slice().reverse().forEach(function (file) {
+                const item = document.createElement('li');
+                item.className = 'ingest-file';
+
+                const main = document.createElement('div');
+                main.className = 'ingest-file-main';
+
+                const name = document.createElement('span');
+                name.className = 'ingest-file-name';
+                name.textContent = file.name || file.path || 'Unknown file';
+
+                const status = document.createElement('span');
+                status.className = 'ingest-file-status';
+                status.textContent = file.status || 'PROCESSED';
+
+                main.appendChild(name);
+                main.appendChild(status);
+                item.appendChild(main);
+
+                const detail = document.createElement('p');
+                detail.className = 'muted ingest-file-path';
+                detail.textContent = (file.message || 'Processed.') + ' ' + (file.path || '');
+                item.appendChild(detail);
+
+                const filePercent = validPercent(file.processedPercent);
+                if (filePercent !== null) {
+                    const processedRecords = Number(file.processedRecords || 0);
+                    const totalRecords = Number(file.totalRecords || 0);
+                    const progressWrap = document.createElement('div');
+                    progressWrap.className = 'ingest-file-progress';
+
+                    const track = document.createElement('div');
+                    track.className = 'progress-track';
+
+                    const fill = document.createElement('div');
+                    fill.className = 'progress-fill';
+                    fill.style.width = filePercent + '%';
+
+                    const meta = document.createElement('p');
+                    meta.className = 'muted ingest-file-progress-meta';
+                    const countText = totalRecords > 0
+                        ? processedRecords + ' / ' + totalRecords + ' record(s)'
+                        : processedRecords + ' record(s)';
+                    meta.innerHTML = '<span>' + filePercent + '% processed</span><span>' + countText + '</span>';
+
+                    track.appendChild(fill);
+                    progressWrap.appendChild(track);
+                    progressWrap.appendChild(meta);
+                    item.appendChild(progressWrap);
+                }
+
+                list.appendChild(item);
+            });
+        }
+
+        async function refreshIndexStatus() {
+            let latestProgress = null;
+            try {
+                const progressResponse = await fetch('/documents/progress', {headers: {'Accept': 'application/json'}});
+                if (progressResponse.ok) {
+                    const progress = await progressResponse.json();
+                    latestProgress = progress;
+                    renderIngestFiles(progress);
+                    if (progress && progress.running) {
+                        wasRunning = true;
+                        document.getElementById('startIngestBtn').style.display = 'none';
+                        document.getElementById('stopIngestForm').style.display = 'inline-block';
+                        const embedded = Number(progress.embeddedChunks || 0);
+                        const chunks = Number(progress.totalChunksToEmbed || 0);
+                        const activeFile = latestStructuredFile(progress);
+                        const ingestPercent = activeFile ? validPercent(activeFile.processedPercent) : null;
+                        const percent = progress.phase === 'INGESTING' && ingestPercent !== null
+                            ? ingestPercent
+                            : toPercent(embedded, chunks);
+                        renderMainProgress(percent);
+                        document.getElementById('embeddedCount').textContent = String(embedded);
+                        document.getElementById('chunkCount').textContent = String(chunks);
+                        document.getElementById('ingestStatus').textContent = progress.phase || 'RUNNING';
+                        document.getElementById('ingestJobId').textContent = progress.ingestJobId || progress.runId || '—';
+                        document.getElementById('progressMessage').textContent = progress.message || 'Ingest/index in progress.';
+                        return;
+                    } else {
+                        document.getElementById('startIngestBtn').style.display = 'inline-block';
+                        document.getElementById('stopIngestForm').style.display = 'none';
+                    }
+                }
+
+                const response = await fetch('/api/index/status', {headers: {'Accept': 'application/json'}});
+                if (!response.ok) {
+                    return;
+                }
+                const status = await response.json();
+                const embedded = Number(status.embeddedChunkCount || 0);
+                const chunks = Number(status.chunkCount || 0);
+                const percent = toPercent(embedded, chunks);
+
+                renderMainProgress(percent);
+                document.getElementById('embeddedCount').textContent = String(embedded);
+                document.getElementById('chunkCount').textContent = String(chunks);
+                document.getElementById('ingestStatus').textContent = (latestProgress && latestProgress.phase) || status.lastIngestStatus || '—';
+                document.getElementById('ingestJobId').textContent = (latestProgress && (latestProgress.ingestJobId || latestProgress.runId)) || status.lastIngestJobId || '—';
+                document.getElementById('progressMessage').textContent = (latestProgress && latestProgress.message) || '—';
+
+                // Refresh list automatically once async ingest/index run has just finished.
+                if (wasRunning) {
+                    wasRunning = false;
+                    const selectedPath = document.getElementById('selectedIngestPathHidden')?.value || '';
+                    const target = selectedPath
+                        ? '/documents?selectedIngestPath=' + encodeURIComponent(selectedPath)
+                        : '/documents';
+                    window.location.replace(target);
+                }
+            } catch (e) {
+                // Keep the latest rendered values when polling temporarily fails.
+            }
+        }
+
+        refreshIndexStatus();
+        setInterval(refreshIndexStatus, 2000);
+
+        const startIngestBtn = document.getElementById('startIngestBtn');
+        const openFolderDialogBtn = document.getElementById('openFolderDialogBtn');
+        const selectedIngestPathHidden = document.getElementById('selectedIngestPathHidden');
+        const selectedIngestPathValue = document.getElementById('selectedIngestPathValue');
+        const folderPicker = document.getElementById('folderPicker');
+        const closeFolderPickerBtn = document.getElementById('closeFolderPickerBtn');
+        const selectCurrentFolderBtn = document.getElementById('selectCurrentFolderBtn');
+        const goParentFolderBtn = document.getElementById('goParentFolderBtn');
+        const folderPickerCurrent = document.getElementById('folderPickerCurrent');
+        const folderRootList = document.getElementById('folderRootList');
+        const folderDirectoryList = document.getElementById('folderDirectoryList');
+        const folderPickerMessage = document.getElementById('folderPickerMessage');
+        let currentFolderPath = '';
+        let currentParentPath = '';
+
+        if (startIngestBtn) {
+            startIngestBtn.addEventListener('click', handleIngestClick);
+        }
+
+        function syncSelectedPath(path) {
+            if (selectedIngestPathHidden) {
+                selectedIngestPathHidden.value = path || '';
+            }
+            if (selectedIngestPathValue) {
+                selectedIngestPathValue.value = path || '';
+            }
+        }
+        if (selectedIngestPathHidden) {
+            selectedIngestPathHidden.addEventListener('input', function () {
+                syncSelectedPath(selectedIngestPathHidden.value);
+            });
+            syncSelectedPath(selectedIngestPathHidden.value);
+        }
+
+        function setFolderPickerMessage(message) {
+            if (folderPickerMessage) {
+                folderPickerMessage.textContent = message || '';
+            }
+        }
+
+        function renderPathButtons(container, entries, emptyText) {
+            if (!container) {
+                return;
+            }
+            container.innerHTML = '';
+            if (!entries || entries.length === 0) {
+                const empty = document.createElement('p');
+                empty.className = 'muted';
+                empty.textContent = emptyText;
+                container.appendChild(empty);
+                return;
+            }
+            entries.forEach(function (entry) {
+                if (!entry || !entry.path) {
+                    return;
+                }
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'folder-item';
+                button.textContent = entry.name || entry.path;
+                button.title = entry.path;
+                button.addEventListener('click', function () {
+                    openFolderBrowser(entry.path);
+                });
+                container.appendChild(button);
+            });
+        }
+
+        function renderFolderBrowser(payload) {
+            currentFolderPath = payload && payload.currentPath ? payload.currentPath : '';
+            currentParentPath = payload && payload.parentPath ? payload.parentPath : '';
+            if (folderPicker) {
+                folderPicker.hidden = false;
+            }
+            if (folderPickerCurrent) {
+                folderPickerCurrent.textContent = currentFolderPath || '-';
+            }
+            if (goParentFolderBtn) {
+                goParentFolderBtn.disabled = !currentParentPath;
+            }
+            renderPathButtons(folderRootList, payload ? payload.roots : [], 'No filesystem roots are available.');
+            renderPathButtons(folderDirectoryList, payload ? payload.directories : [], 'No readable folders found here.');
+            setFolderPickerMessage(payload && payload.message ? payload.message : '');
+        }
+
+        async function openFolderBrowser(path) {
+            setFolderPickerMessage('Loading folders...');
+            try {
+                const response = await fetch('/documents/select-folder', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'},
+                    body: new URLSearchParams({currentPath: path || ''})
+                });
+                const payload = await response.json().catch(function () {
+                    return null;
+                });
+                if (!response.ok || !payload) {
+                    setFolderPickerMessage((payload && payload.message) || 'Folder browser is not available.');
+                    return;
+                }
+                renderFolderBrowser(payload);
+            } catch (e) {
+                setFolderPickerMessage('Folder browser is not available.');
+            }
+        }
+
+        if (openFolderDialogBtn) {
+            openFolderDialogBtn.addEventListener('click', function () {
+                openFolderBrowser(selectedIngestPathHidden ? selectedIngestPathHidden.value : '');
+            });
+        }
+        if (closeFolderPickerBtn) {
+            closeFolderPickerBtn.addEventListener('click', function () {
+                if (folderPicker) {
+                    folderPicker.hidden = true;
+                }
+            });
+        }
+        if (selectCurrentFolderBtn) {
+            selectCurrentFolderBtn.addEventListener('click', function () {
+                if (currentFolderPath) {
+                    syncSelectedPath(currentFolderPath);
+                }
+                if (folderPicker) {
+                    folderPicker.hidden = true;
+                }
+            });
+        }
+        if (goParentFolderBtn) {
+            goParentFolderBtn.addEventListener('click', function () {
+                if (currentParentPath) {
+                    openFolderBrowser(currentParentPath);
+                }
+            });
+        }
+    })();
+</script>
 </body>
 </html>

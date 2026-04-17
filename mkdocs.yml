@@ -71,6 +71,7 @@ markdown_extensions:
 
 nav:
   - Home: index.md
+  - User Guide: DocuRAG-USER-GUIDE.md
   - AI Context: ai-context-strategy.md
   - Product:
       - PRD: DocuRAG-PRD.md

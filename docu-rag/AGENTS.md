@@ -15,7 +15,7 @@ Rule: other modules should only depend on `...<module>.api.*` where possible.
 
 ## Profiles / Runtime
 
-- `local`: typical dev run on **8080** (expects local-only `application-local.yml`, created from the template)
+- `local`: typical dev run on **8084** (expects local-only `application-local.yml`, created from the template)
 - `test`: automated tests (stub AI beans)
 - `e2e`: black-box run (stub AI beans, port **18080**, datasource `localhost:5433`)
 - `eval-cli`: runs one evaluation and exits (combine with `local` or `e2e`)
@@ -23,6 +23,21 @@ Rule: other modules should only depend on `...<module>.api.*` where possible.
 Local config template:
 
 - `src/main/resources/application-local.example.yml` → `src/main/resources/application-local.yml` (gitignored)
+
+## Database Setup (Docker Compose)
+
+The app requires **PostgreSQL 16 with pgvector**. Use the provided `compose.yaml`:
+
+```bash
+cd docu-rag
+docker compose up -d
+```
+
+- Image: `pgvector/pgvector:pg16`
+- Database: `docurag`, user/password: `docurag`/`docurag`
+- Host port: **5433** → container 5432
+
+Check status: `docker compose ps`
 
 ## Key Contracts
 
@@ -49,4 +64,3 @@ mvn spring-boot:run -Dspring-boot.run.profiles=local
 Skills live at repo root: `../.claude/skills/`
 
 - `core-architecture`, `domain-modeling`, `repository-design`, `api-design`, `ai-provider`, `testing`
-

@@ -58,19 +58,6 @@ Main documents:
 - [`docs/DocuRAG-DEVELOPER-GUIDE.md`](docs/DocuRAG-DEVELOPER-GUIDE.md)
 - [`docs/DocuRAG-IMPLEMENTATION-PLAN-WBS.md`](docs/DocuRAG-IMPLEMENTATION-PLAN-WBS.md)
 
-MkDocs site:
-
-```bash
-pip install -r requirements-docs.txt
-mkdocs serve
-```
-
-Build the static site:
-
-```bash
-mkdocs build
-```
-
 ## Developer setup
 
 Prerequisites:
@@ -81,6 +68,13 @@ Prerequisites:
 - Optional for local AI runs: Ollama or another OpenAI-compatible endpoint
 - Optional for UI E2E: Playwright Chromium installed in `docu-rag-e2e`
 - Optional for docs: Python 3 with `pip`
+
+Start PostgreSQL:
+
+```bash
+cd docu-rag
+docker compose -f compose.yaml up -d
+```
 
 ## Build
 
@@ -157,7 +151,7 @@ cd docu-rag
 mvn -q spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
-Then open `http://localhost:8080/`.
+Then open `http://localhost:8084/`.
 
 For local AI-backed execution, configure environment variables such as:
 
@@ -172,17 +166,9 @@ For local AI-backed execution, configure environment variables such as:
 ## Data and evaluation
 
 - Primary dataset: [Sagarika-Singh-99/medical-rag-corpus](https://huggingface.co/datasets/Sagarika-Singh-99/medical-rag-corpus)
-- PDF demo data guidance: [`docu-rag/data/pdf-demo/README.md`](docu-rag/data/pdf-demo/README.md)
-- Corpus subset guidance: [`docu-rag/data/corpus/README.md`](docu-rag/data/corpus/README.md)
+- PDF demo data guidance: [`data/pdf-demo/README.md`](data/pdf-demo/README.md)
+- Corpus subset guidance: [`data/corpus/README.md`](data/corpus/README.md)
 - Product spec: [`docs/DocuRAG-PRD.md`](docs/DocuRAG-PRD.md)
-
-## Relevant learning materials from the task
-
-- https://leap.epam.com/experiment-collections/llm-introduction-for-beginners/experiments/beginner_chunking
-- https://leap.epam.com/experiment-collections/llm-introduction-for-beginners/experiments/rag_exploration
-- https://leap.epam.com/experiments/langchain-rag-implementation-jupyter?page=1
-- https://leap.epam.com/experiments/rag-with-conversational-memory?page=1
-- https://leap.epam.com/experiment-collections/genai-mere-mortals/experiments/genai-mere-mortals-rag-basics
 
 ## Repository structure
 
@@ -197,4 +183,17 @@ For local AI-backed execution, configure environment variables such as:
 ├── docu-rag-e2e/
 ├── docu-rag-parent/
 └── scripts/
+```
+
+MkDocs site:
+
+```bash
+pip install -r requirements-docs.txt
+mkdocs serve
+```
+
+Build the static site:
+
+```bash
+mkdocs build
 ```

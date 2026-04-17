@@ -27,7 +27,7 @@ public class LocalHomeBrowserLauncher implements ApplicationListener<Application
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
         Environment env = event.getApplicationContext().getEnvironment();
-        String port = env.getProperty("local.server.port", env.getProperty("server.port", "8080"));
+        String port = env.getProperty("local.server.port", env.getProperty("server.port", "8084"));
         String homeUrl = "http://localhost:" + port + "/";
 
         if (GraphicsEnvironment.isHeadless()) {

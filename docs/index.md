@@ -24,11 +24,11 @@ The project emphasizes:
 - [Use Cases](DocuRAG-USE-CASES.md)
 - [User Stories](DocuRAG-USER-STORIES.md)
 - [Forms and Flows](DocuRAG-FORMS-AND-FLOWS.md)
-- [Wireframes](DocuRAG-WIREFRAMES.md)
+- [Text Wireframes](DocuRAG-WIREFRAMES.md)
 
 ## Documentation Structure
 
-- **Product**: scope, requirements, use cases, and user stories
+- **Product**: scope, requirements, use cases, user stories, and text wireframes
 - **Architecture**: system design, flows, and UI structure
 - **Delivery**: implementation planning, data sources, and local development workflow
 - **Submission**: course submission support materials

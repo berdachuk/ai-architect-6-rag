@@ -34,20 +34,75 @@ Expand the list to **5–10** similar documents from:
 
 Record each addition in the manifest section below.
 
-## Local layout
+## Manual PDF Selection and Indexing
 
-1. Download PDFs you are allowed to use for your demo.
-2. Recommended local folder: `docu-rag/data/pdf-demo/downloaded/` (PDF binaries are gitignored).
-3. Point the app at the folder:
-   - Env: `DOCURAG_PDF_DEMO_PATH=<absolute-path-to-downloaded>`
-   - Or local profile config: `docurag.ingestion.pdf-demo-path` in `application-local.yml` (created from `application-local.example.yml`)
-4. Run ingestion per application README (FR-1), or call the API explicitly:
+### Step 1: Select PDFs
+
+**Option A — Web UI (recommended)**
+1. Start the app: `cd docu-rag && mvn spring-boot:run -Dspring-boot.run.profiles=local`
+2. Open http://localhost:8084 in your browser
+3. Go to **Documents** page
+4. Click **"Choose data folder"** button — this opens a native folder picker
+5. Select your PDF folder (e.g., `data/pdf-demo/downloaded/`)
+6. The selected path appears on screen (no ingest starts yet)
+7. Click **"Start ingest"** to begin ingestion + indexing
+
+**Option B — Upload specific files**
+1. On the Documents page, click **"Choose data folder"**
+2. In the file picker dialog, select individual PDF files instead of a folder
+3. Click **"Start ingest"**
+
+**Option C — API**
+```bash
+# Single folder
+curl -s -X POST http://localhost:8084/api/documents/ingest \
+  -H "Content-Type: application/json" \
+  -d '{"paths":["/absolute/path/to/pdfs"]}'
+
+# Multiple specific paths
+curl -s -X POST http://localhost:8084/api/documents/ingest \
+  -H "Content-Type: application/json" \
+  -d '{"paths":["/path/to/pdf1.pdf", "/path/to/pdf2.pdf"]}'
+```
+
+### Step 2: Monitor Progress
+
+After starting ingest:
+- The Documents page auto-refreshes progress every 2 seconds
+- Watch the progress bar and "Last ingest status" field
+- When status shows "COMPLETED", ingestion is done
+
+### Step 3: Verify Indexing
 
 ```bash
-curl -s -X POST http://localhost:8080/api/documents/ingest \
-  -H "Content-Type: application/json" \
-  -d '{"paths":["/absolute/path/to/docu-rag/data/pdf-demo/downloaded"]}'
+# Check document count
+curl http://localhost:8084/api/documents | python3 -c "import sys,json; print(f'Documents: {len(json.load(sys.stdin))}')"
+
+# Check index/chunk status
+curl http://localhost:8084/api/index/status
+
+# Rebuild index (if needed)
+curl -X POST http://localhost:8084/api/index/rebuild
 ```
+
+### Step 4: Query (RAG)
+
+```bash
+curl -X POST http://localhost:8084/api/rag/ask \
+  -H "Content-Type: application/json" \
+  -d '{"question": "What does the FDA guidance say about drug safety?", "topK": 3}'
+```
+
+## Local folder layout
+
+- PDF binaries: `data/pdf-demo/downloaded/` (gitignored)
+- Manifest: `data/pdf-demo/manifest.json` (gitignored)
+- Config: Set in `application-local.yml`:
+  ```yaml
+  docurag:
+    ingestion:
+      pdf-demo-path: /absolute/path/to/data/pdf-demo/downloaded
+  ```
 
 **Git:** Large binaries are often **not** committed. This repository may keep **only** this README and, if needed, **tiny** PDF fixtures under `src/test/resources` for automated tests.
 

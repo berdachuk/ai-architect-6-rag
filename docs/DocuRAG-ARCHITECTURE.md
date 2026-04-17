@@ -84,7 +84,7 @@ flowchart LR
 | Local infra | **Docker Compose** + **WSL2** | Dev parity |
 | Tests | **JUnit**, **Testcontainers** | pgvector image; **mocked** AI in default suite |
 | Primary dataset | [medical-rag-corpus](https://huggingface.co/datasets/Sagarika-Singh-99/medical-rag-corpus) | Subset + manifest |
-| PDF demo pack | Open English medical PDFs (EU / NHS / similar) | Documented in `docu-rag/data/pdf-demo/README.md`; **PDFBox** in **`documents`** |
+| PDF demo pack | Open English medical PDFs (EU / NHS / similar) | Documented in `data/pdf-demo/README.md`; **PDFBox** in **`documents`** |
 
 ---
 
