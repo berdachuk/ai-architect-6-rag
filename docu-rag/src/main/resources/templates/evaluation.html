@@ -15,6 +15,9 @@
         input { padding: 0.35rem; margin-right: 0.5rem; }
         .success { color: #065f46; background: #ecfdf5; border: 1px solid #10b981; border-radius: 6px; padding: 0.6rem 0.8rem; }
         .info { color: #1e3a8a; background: #eff6ff; border: 1px solid #3b82f6; border-radius: 6px; padding: 0.6rem 0.8rem; }
+        .log-panel { background: #101820; color: #dbeafe; border-radius: 6px; padding: 0.75rem; min-height: 9rem; max-height: 20rem; overflow-y: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.88rem; }
+        .log-line { white-space: pre-wrap; overflow-wrap: anywhere; margin-bottom: 0.35rem; }
+        .muted { color: #6b7280; }
         tr.highlight { background: #fffbeb; }
     </style>
 </head>
@@ -37,6 +40,9 @@
         <div id="evaluation-running" class="info" style="display:none; margin-top: 0.75rem;">
             Running evaluation now. This can take some time, please wait...
         </div>
+        <div th:if="${evaluationActionMessage != null}">
+            <p class="success" th:text="${evaluationActionMessage}"></p>
+        </div>
         <div th:if="${runError != null}">
             <p style="color:#b91c1c;" th:text="${runError}"></p>
         </div>
@@ -47,6 +53,20 @@
             <p>Mean semantic similarity: <span th:text="${runResult.meanSemanticSimilarity()}"></span></p>
             <p>Semantic accuracy @<span th:text="${runResult.semanticPassThreshold()}"></span>: <span th:text="${runResult.semanticAccuracy()}"></span></p>
             <p>Semantic accuracy @0.80: <span th:text="${runResult.semanticAccuracyAt080()}"></span></p>
+        </div>
+    </div>
+    <div class="card">
+        <h2>Clean old data</h2>
+        <p>Delete previous evaluation runs and stored results. The seeded dataset stays available for the next run.</p>
+        <form method="post" th:action="@{/evaluation/clear-old-data}">
+            <button type="submit">Clean old evaluation data</button>
+        </form>
+    </div>
+    <div class="card">
+        <h2>Evaluation log</h2>
+        <p class="muted" id="evaluation-log-status">Logs will appear here while evaluation is running.</p>
+        <div class="log-panel" id="evaluation-log" aria-live="polite">
+            <div class="log-line">No evaluation log entries yet.</div>
         </div>
     </div>
     <div class="card">
@@ -82,11 +102,92 @@
         var form = document.getElementById('evaluation-form');
         var button = document.getElementById('run-evaluation-btn');
         var running = document.getElementById('evaluation-running');
+        var logPanel = document.getElementById('evaluation-log');
+        var logStatus = document.getElementById('evaluation-log-status');
+        var pollTimer = null;
+
+        function renderLogs(snapshot) {
+            if (!logPanel || !logStatus || !snapshot) return;
+            var entries = snapshot.entries || [];
+            logStatus.textContent = snapshot.running
+                ? 'Evaluation is running' + (snapshot.runId ? ': ' + snapshot.runId : '') + '.'
+                : (entries.length ? 'Latest evaluation log.' : 'Logs will appear here while evaluation is running.');
+            if (!entries.length) {
+                logPanel.innerHTML = '<div class="log-line">No evaluation log entries yet.</div>';
+                return;
+            }
+            logPanel.innerHTML = '';
+            entries.forEach(function (entry) {
+                var line = document.createElement('div');
+                line.className = 'log-line';
+                line.textContent = entry;
+                logPanel.appendChild(line);
+            });
+            logPanel.scrollTop = logPanel.scrollHeight;
+        }
+
+        function pollLogs() {
+            return fetch('/evaluation/logs', {
+                headers: { 'Accept': 'application/json' },
+                cache: 'no-store'
+            })
+                .then(function (response) {
+                    if (!response.ok) throw new Error('Log request failed');
+                    return response.json();
+                })
+                .then(renderLogs)
+                .catch(function () {
+                    if (logStatus) {
+                        logStatus.textContent = 'Could not refresh evaluation logs.';
+                    }
+                });
+        }
+
+        function startPolling() {
+            if (pollTimer) window.clearInterval(pollTimer);
+            pollLogs();
+            pollTimer = window.setInterval(pollLogs, 1000);
+        }
+
+        function stopPolling() {
+            if (pollTimer) {
+                window.clearInterval(pollTimer);
+                pollTimer = null;
+            }
+        }
+
         if (!form || !button || !running) return;
-        form.addEventListener('submit', function () {
+        pollLogs();
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
             button.disabled = true;
             button.textContent = 'Running...';
             running.style.display = 'block';
+            startPolling();
+
+            fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: { 'Accept': 'text/html' }
+            })
+                .then(function (response) {
+                    return response.text();
+                })
+                .then(function (html) {
+                    stopPolling();
+                    document.open();
+                    document.write(html);
+                    document.close();
+                })
+                .catch(function () {
+                    stopPolling();
+                    button.disabled = false;
+                    button.textContent = 'Run evaluation';
+                    running.style.display = 'none';
+                    if (logStatus) {
+                        logStatus.textContent = 'Evaluation request failed.';
+                    }
+                });
         });
     })();
 </script>

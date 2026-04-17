@@ -1,6 +1,7 @@
 package com.berdachuk.docurag.web.pages;
 
 import com.berdachuk.docurag.evaluation.api.EvaluationApi;
+import com.berdachuk.docurag.evaluation.api.EvaluationLogSnapshot;
 import com.berdachuk.docurag.evaluation.api.EvaluationRunRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -8,6 +9,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 @RequiredArgsConstructor
@@ -17,10 +19,7 @@ public class EvaluationController {
 
     @GetMapping("/evaluation")
     public String evaluationForm(Model model) {
-        model.addAttribute("runs", evaluationApi.listRuns());
-        model.addAttribute("runResult", null);
-        model.addAttribute("runError", null);
-        model.addAttribute("highlightRunId", null);
+        populateEvaluationPage(model);
         return "evaluation";
     }
 
@@ -44,5 +43,29 @@ public class EvaluationController {
         }
         model.addAttribute("runs", evaluationApi.listRuns());
         return "evaluation";
+    }
+
+    @PostMapping("/evaluation/clear-old-data")
+    public String clearOldEvaluationData(Model model) {
+        int affected = evaluationApi.clearRuns();
+        populateEvaluationPage(model);
+        model.addAttribute(
+                "evaluationActionMessage",
+                "Old evaluation data cleanup complete: deleted " + affected + " run(s) and associated result rows."
+        );
+        return "evaluation";
+    }
+
+    @GetMapping("/evaluation/logs")
+    @ResponseBody
+    public EvaluationLogSnapshot evaluationLogs() {
+        return evaluationApi.logs();
+    }
+
+    private void populateEvaluationPage(Model model) {
+        model.addAttribute("runs", evaluationApi.listRuns());
+        model.addAttribute("runResult", null);
+        model.addAttribute("runError", null);
+        model.addAttribute("highlightRunId", null);
     }
 }

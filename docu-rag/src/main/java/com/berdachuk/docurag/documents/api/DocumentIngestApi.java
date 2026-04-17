@@ -7,4 +7,12 @@ public interface DocumentIngestApi {
     IngestSummary ingestConfiguredPaths();
 
     IngestSummary ingestPaths(List<String> paths);
+
+    default IngestSummary ingestConfiguredPaths(IngestProgressListener progressListener) {
+        return ingestConfiguredPaths();
+    }
+
+    default IngestSummary ingestPaths(List<String> paths, IngestProgressListener progressListener) {
+        return ingestPaths(paths);
+    }
 }

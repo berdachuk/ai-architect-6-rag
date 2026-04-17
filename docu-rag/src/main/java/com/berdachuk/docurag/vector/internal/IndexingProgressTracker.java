@@ -1,13 +1,18 @@
 package com.berdachuk.docurag.vector.internal;
 
 import com.berdachuk.docurag.vector.api.IndexingProgressApi;
+import com.berdachuk.docurag.vector.api.IndexingProgressApi.IngestFileProgress;
 import com.berdachuk.docurag.vector.api.IndexingProgressApi.ProgressSnapshot;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.time.OffsetDateTime;
 
 @Component
 public class IndexingProgressTracker implements IndexingProgressApi {
+
+    private static final int MAX_FILE_PROGRESS_EVENTS = 300;
 
     private boolean running;
     private String runId;
@@ -18,6 +23,7 @@ public class IndexingProgressTracker implements IndexingProgressApi {
     private String ingestJobId;
     private OffsetDateTime startedAt;
     private OffsetDateTime updatedAt;
+    private final List<IngestFileProgress> ingestFiles = new ArrayList<>();
 
     public synchronized void start(String runId, String message) {
         this.running = true;
@@ -29,6 +35,7 @@ public class IndexingProgressTracker implements IndexingProgressApi {
         this.ingestJobId = null;
         this.startedAt = OffsetDateTime.now();
         this.updatedAt = this.startedAt;
+        this.ingestFiles.clear();
     }
 
     public synchronized void stop() {
@@ -44,6 +51,34 @@ public class IndexingProgressTracker implements IndexingProgressApi {
         }
         this.ingestJobId = ingestJobId;
         this.message = "Ingest completed: loaded " + loaded + ", skipped " + skipped + ".";
+        this.updatedAt = OffsetDateTime.now();
+    }
+
+    @Override
+    public synchronized void markIngestFileProcessed(
+            String path,
+            String name,
+            int documentsLoaded,
+            int documentsSkipped,
+            String status,
+            String message
+    ) {
+        if (!running) {
+            return;
+        }
+        this.ingestFiles.add(new IngestFileProgress(
+                path,
+                name,
+                Math.max(0, documentsLoaded),
+                Math.max(0, documentsSkipped),
+                status,
+                message,
+                OffsetDateTime.now()
+        ));
+        while (this.ingestFiles.size() > MAX_FILE_PROGRESS_EVENTS) {
+            this.ingestFiles.removeFirst();
+        }
+        this.message = "Ingested files: " + this.ingestFiles.size() + ".";
         this.updatedAt = OffsetDateTime.now();
     }
 
@@ -103,7 +138,8 @@ public class IndexingProgressTracker implements IndexingProgressApi {
                 message,
                 ingestJobId,
                 startedAt,
-                updatedAt
+                updatedAt,
+                List.copyOf(ingestFiles)
         );
     }
 }

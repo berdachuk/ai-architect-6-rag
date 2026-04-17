@@ -8,6 +8,7 @@ import com.berdachuk.docurag.core.config.DocuRagProperties;
 import com.berdachuk.docurag.core.util.IdGenerator;
 import com.berdachuk.docurag.evaluation.api.EvaluationApi;
 import com.berdachuk.docurag.evaluation.api.EvaluationCaseResult;
+import com.berdachuk.docurag.evaluation.api.EvaluationLogSnapshot;
 import com.berdachuk.docurag.evaluation.api.EvaluationRunDetail;
 import com.berdachuk.docurag.evaluation.api.EvaluationRunRequest;
 import com.berdachuk.docurag.evaluation.api.EvaluationRunStartedResponse;
@@ -39,10 +40,12 @@ public class EvaluationServiceImpl implements EvaluationApi {
     private final CustomEmbeddingProperties embeddingProperties;
     private final ObjectMapper objectMapper;
     private final EvaluationSampleDatasetSeeder datasetSeeder;
+    private final EvaluationProgressTracker progressTracker;
 
     @Override
     public EvaluationRunStartedResponse run(EvaluationRunRequest request) {
         validateRequest(request);
+        String datasetName = request.datasetName();
         datasetSeeder.ensureDatasetSeeded(request.datasetName());
         String datasetId = repository.findDatasetIdByName(request.datasetName())
                 .orElseThrow(() -> new IllegalArgumentException("Unknown dataset: " + request.datasetName()));
@@ -55,6 +58,10 @@ public class EvaluationServiceImpl implements EvaluationApi {
         double semTh = request.semanticPassThreshold() != null ? request.semanticPassThreshold() : 0.80;
 
         String runId = IdGenerator.generateId();
+        int n = cases.size();
+        progressTracker.start(runId, datasetName, n);
+        progressTracker.log("Using topK=" + topK + ", minScore=" + minScore + ", semanticPassThreshold=" + semTh + ".");
+        progressTracker.log("Chat model=" + chatProperties.getModel() + ", embedding model=" + embeddingProperties.getModel() + ".");
         OffsetDateTime started = OffsetDateTime.now();
         repository.insertRun(runId, datasetId, started, chatProperties.getModel(), embeddingProperties.getModel(), semTh);
 
@@ -62,54 +69,65 @@ public class EvaluationServiceImpl implements EvaluationApi {
         double semSum = 0;
         int semPassAt080 = 0;
         int semPass = 0;
-        for (EvaluationJdbcRepository.EvalCaseRow c : cases) {
-            RagAskResponse rag = ragAskApi.ask(new RagAskRequest(c.question(), topK, minScore));
-            String pred = rag.answer() == null ? "" : rag.answer().trim();
-            String gt = c.groundTruth() == null ? "" : c.groundTruth().trim();
-            boolean exact = pred.equalsIgnoreCase(gt);
-            boolean norm = TextNormalization.normalize(pred).equals(TextNormalization.normalize(gt));
-            if (norm) {
-                normHits++;
+        try {
+            int caseNumber = 0;
+            for (EvaluationJdbcRepository.EvalCaseRow c : cases) {
+                caseNumber++;
+                progressTracker.log("Case " + caseNumber + "/" + n + ": asking " + preview(c.question()));
+                RagAskResponse rag = ragAskApi.ask(new RagAskRequest(c.question(), topK, minScore));
+                String pred = rag.answer() == null ? "" : rag.answer().trim();
+                String gt = c.groundTruth() == null ? "" : c.groundTruth().trim();
+                boolean exact = pred.equalsIgnoreCase(gt);
+                boolean norm = TextNormalization.normalize(pred).equals(TextNormalization.normalize(gt));
+                if (norm) {
+                    normHits++;
+                }
+                progressTracker.log("Case " + caseNumber + "/" + n + ": scoring answer.");
+                float[] ev = embeddingModel.embed(new Document(pred));
+                float[] gv = embeddingModel.embed(new Document(gt));
+                double cos = VectorMath.cosineSimilarity(ev, gv);
+                semSum += cos;
+                if (cos >= 0.80) {
+                    semPassAt080++;
+                }
+                boolean pass = cos >= semTh;
+                if (pass) {
+                    semPass++;
+                }
+                String chunksJson = toJson(rag);
+                repository.insertResult(
+                        IdGenerator.generateId(),
+                        runId,
+                        c.id(),
+                        pred,
+                        exact,
+                        norm,
+                        cos,
+                        pass,
+                        chunksJson
+                );
+                progressTracker.log("Case " + caseNumber + "/" + n + ": semantic similarity=" + round4(cos) + ", pass=" + pass + ".");
             }
-            float[] ev = embeddingModel.embed(new Document(pred));
-            float[] gv = embeddingModel.embed(new Document(gt));
-            double cos = VectorMath.cosineSimilarity(ev, gv);
-            semSum += cos;
-            if (cos >= 0.80) {
-                semPassAt080++;
-            }
-            boolean pass = cos >= semTh;
-            if (pass) {
-                semPass++;
-            }
-            String chunksJson = toJson(rag);
-            repository.insertResult(
-                    IdGenerator.generateId(),
+            double normAcc = n == 0 ? 0 : (double) normHits / n;
+            double meanSem = n == 0 ? 0 : semSum / n;
+            double semAtThreshold = n == 0 ? 0 : (double) semPass / n;
+            double sem080 = n == 0 ? 0 : (double) semPassAt080 / n;
+            progressTracker.log("Writing evaluation summary.");
+            repository.finishRun(runId, OffsetDateTime.now(), normAcc, meanSem, semAtThreshold, sem080);
+            progressTracker.finish(runId);
+            return new EvaluationRunStartedResponse(
                     runId,
-                    c.id(),
-                    pred,
-                    exact,
-                    norm,
-                    cos,
-                    pass,
-                    chunksJson
+                    n,
+                    round4(normAcc),
+                    round4(meanSem),
+                    round4(semAtThreshold),
+                    round4(semTh),
+                    round4(sem080)
             );
+        } catch (RuntimeException ex) {
+            progressTracker.fail(runId, ex.getMessage() == null ? ex.getClass().getSimpleName() : ex.getMessage());
+            throw ex;
         }
-        int n = cases.size();
-        double normAcc = n == 0 ? 0 : (double) normHits / n;
-        double meanSem = n == 0 ? 0 : semSum / n;
-        double semAtThreshold = n == 0 ? 0 : (double) semPass / n;
-        double sem080 = n == 0 ? 0 : (double) semPassAt080 / n;
-        repository.finishRun(runId, OffsetDateTime.now(), normAcc, meanSem, semAtThreshold, sem080);
-        return new EvaluationRunStartedResponse(
-                runId,
-                n,
-                round4(normAcc),
-                round4(meanSem),
-                round4(semAtThreshold),
-                round4(semTh),
-                round4(sem080)
-        );
     }
 
     private static void validateRequest(EvaluationRunRequest request) {
@@ -160,6 +178,19 @@ public class EvaluationServiceImpl implements EvaluationApi {
         return Optional.of(new EvaluationRunDetail(toSummary(row), mapResults(row.id())));
     }
 
+    @Override
+    public int clearRuns() {
+        int deleted = repository.deleteRuns();
+        progressTracker.clear();
+        progressTracker.log("Deleted " + deleted + " evaluation run(s) and associated result rows.");
+        return deleted;
+    }
+
+    @Override
+    public EvaluationLogSnapshot logs() {
+        return progressTracker.snapshot();
+    }
+
     private List<EvaluationCaseResult> mapResults(String runId) {
         List<EvaluationCaseResult> out = new ArrayList<>();
         for (EvaluationJdbcRepository.ResultRow r : repository.findResultsForRun(runId)) {
@@ -191,5 +222,13 @@ public class EvaluationServiceImpl implements EvaluationApi {
                 row.semanticPassThreshold(),
                 row.semanticAccuracyAt080()
         );
+    }
+
+    private static String preview(String text) {
+        if (text == null || text.isBlank()) {
+            return "(empty question)";
+        }
+        String compact = text.replaceAll("\\s+", " ").trim();
+        return compact.length() <= 120 ? compact : compact.substring(0, 117) + "...";
     }
 }

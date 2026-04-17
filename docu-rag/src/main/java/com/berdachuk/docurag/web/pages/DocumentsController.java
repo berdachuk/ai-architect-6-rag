@@ -14,17 +14,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import javax.swing.JFileChooser;
-import javax.swing.SwingUtilities;
-import java.awt.GraphicsEnvironment;
 import java.io.File;
-import java.lang.reflect.InvocationTargetException;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.Comparator;
 
 @Controller
@@ -38,23 +34,30 @@ public class DocumentsController {
     private final DocuRagProperties properties;
 
     @GetMapping("/documents")
-    public String documents(Model model, @RequestParam(defaultValue = "0") int page) {
+    public String documents(
+            Model model,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) String selectedIngestPath
+    ) {
+        if (selectedIngestPath != null && !selectedIngestPath.isBlank()) {
+            model.addAttribute("selectedIngestPath", selectedIngestPath.trim());
+        }
         populateDocumentsPage(model, page);
         return "documents";
     }
 
     @PostMapping("/documents/ingest")
-    public String ingestConfigured(Model model) {
+    public String ingestConfigured(RedirectAttributes redirectAttributes) {
         String runId = ingestOrchestrator.startConfiguredIngestAndIndex();
-        model.addAttribute("indexActionMessage", "Started ingest + indexing run " + runId + ". Progress is updating below.");
-        populateDocumentsPage(model, 0);
-        return "documents";
+        redirectAttributes.addFlashAttribute("indexActionMessage", "Started ingest + indexing run " + runId + ". Progress is updating below.");
+        return "redirect:/documents";
     }
 
     @PostMapping("/documents/ingest-path")
     public String ingestCustomPath(
             Model model,
-            @RequestParam String ingestPath
+            @RequestParam String ingestPath,
+            RedirectAttributes redirectAttributes
     ) {
         String selectedPath = ingestPath == null ? "" : ingestPath.trim();
         model.addAttribute("selectedIngestPath", selectedPath);
@@ -64,9 +67,9 @@ public class DocumentsController {
             return "documents";
         }
         String runId = ingestOrchestrator.startPathIngestAndIndex(List.of(selectedPath));
-        model.addAttribute("indexActionMessage", "Started ingest + indexing run " + runId + ". Progress is updating below.");
-        populateDocumentsPage(model, 0);
-        return "documents";
+        redirectAttributes.addAttribute("selectedIngestPath", selectedPath);
+        redirectAttributes.addFlashAttribute("indexActionMessage", "Started ingest + indexing run " + runId + ". Progress is updating below.");
+        return "redirect:/documents";
     }
 
     @PostMapping("/documents/ingest-upload")
@@ -165,26 +168,16 @@ public class DocumentsController {
     public ResponseEntity<FolderSelectionResponse> selectFolder(
             @RequestParam(required = false) String currentPath
     ) {
-        if (GraphicsEnvironment.isHeadless()) {
-            return ResponseEntity.status(409).body(new FolderSelectionResponse(
-                    null,
-                    true,
-                    "Native folder dialog is not available in headless mode."
-            ));
-        }
-        try {
-            Optional<String> selected = chooseFolder(currentPath);
-            if (selected.isPresent()) {
-                return ResponseEntity.ok(new FolderSelectionResponse(selected.get(), false, null));
-            }
-            return ResponseEntity.ok(new FolderSelectionResponse(null, true, null));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(new FolderSelectionResponse(
-                    null,
-                    true,
-                    "Failed to open folder chooser: " + e.getMessage()
-            ));
-        }
+        Path current = resolveBrowsePath(currentPath);
+        return ResponseEntity.ok(new FolderSelectionResponse(
+                null,
+                false,
+                null,
+                current.toString(),
+                parentPath(current),
+                rootEntries(),
+                childDirectoryEntries(current)
+        ));
     }
 
     private void populateDocumentsPage(Model model, int page) {
@@ -227,50 +220,80 @@ public class DocumentsController {
         }
     }
 
-    private Optional<String> chooseFolder(String currentPath) throws InvocationTargetException, InterruptedException {
-        Path initialPath = null;
+    private Path resolveBrowsePath(String currentPath) {
         if (currentPath != null && !currentPath.isBlank()) {
             try {
                 Path candidate = Path.of(currentPath.trim()).toAbsolutePath().normalize();
                 if (Files.isDirectory(candidate)) {
-                    initialPath = candidate;
+                    return candidate;
+                }
+                Path parent = candidate.getParent();
+                if (parent != null && Files.isDirectory(parent)) {
+                    return parent;
                 }
             } catch (Exception ignored) {
-                // Fall back to user home.
+                // Fall through to configured/default roots.
             }
         }
-        File initialDirectory = initialPath != null
-                ? initialPath.toFile()
-                : Path.of(System.getProperty("user.home")).toFile();
 
-        AtomicReference<File> selectedDir = new AtomicReference<>();
-        Runnable chooseTask = () -> {
-            JFileChooser chooser = new JFileChooser(initialDirectory);
-            chooser.setDialogTitle("Choose data folder");
-            chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            chooser.setAcceptAllFileFilterUsed(false);
-            int result = chooser.showOpenDialog(null);
-            if (result == JFileChooser.APPROVE_OPTION && chooser.getSelectedFile() != null) {
-                selectedDir.set(chooser.getSelectedFile());
+        String configured = resolveDefaultIngestPath();
+        try {
+            Path candidate = Path.of(configured).toAbsolutePath().normalize();
+            if (Files.isDirectory(candidate)) {
+                return candidate;
             }
-        };
+            Path parent = candidate.getParent();
+            if (parent != null && Files.isDirectory(parent)) {
+                return parent;
+            }
+        } catch (Exception ignored) {
+            // Fall through to user home.
+        }
 
-        if (SwingUtilities.isEventDispatchThread()) {
-            chooseTask.run();
-        } else {
-            SwingUtilities.invokeAndWait(chooseTask);
+        return Path.of(System.getProperty("user.home")).toAbsolutePath().normalize();
+    }
+
+    private String parentPath(Path current) {
+        Path parent = current.getParent();
+        return parent == null ? null : parent.toAbsolutePath().normalize().toString();
+    }
+
+    private List<FolderEntry> rootEntries() {
+        return java.util.Arrays.stream(File.listRoots())
+                .map(file -> file.toPath().toAbsolutePath().normalize())
+                .map(path -> new FolderEntry(path.toString(), path.toString()))
+                .toList();
+    }
+
+    private List<FolderEntry> childDirectoryEntries(Path current) {
+        try (var stream = Files.list(current)) {
+            return stream
+                    .filter(Files::isDirectory)
+                    .filter(Files::isReadable)
+                    .sorted(Comparator.comparing(path -> path.getFileName().toString().toLowerCase()))
+                    .limit(300)
+                    .map(path -> path.toAbsolutePath().normalize())
+                    .map(path -> new FolderEntry(path.toString(), path.getFileName().toString()))
+                    .toList();
+        } catch (IOException e) {
+            return List.of();
         }
-        File selected = selectedDir.get();
-        if (selected == null) {
-            return Optional.empty();
-        }
-        return Optional.of(selected.toPath().toAbsolutePath().normalize().toString());
     }
 
     private record FolderSelectionResponse(
             String selectedPath,
             boolean cancelled,
-            String message
+            String message,
+            String currentPath,
+            String parentPath,
+            List<FolderEntry> roots,
+            List<FolderEntry> directories
+    ) {
+    }
+
+    private record FolderEntry(
+            String path,
+            String name
     ) {
     }
 }

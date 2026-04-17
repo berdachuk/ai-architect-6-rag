@@ -265,6 +265,12 @@ public class EvaluationJdbcRepository {
         return rows.stream().findFirst();
     }
 
+    @Transactional
+    public int deleteRuns() {
+        Integer deleted = jdbc.update("DELETE FROM evaluation_run", Map.of());
+        return deleted == null ? 0 : deleted;
+    }
+
     public List<ResultRow> findResultsForRun(String runId) {
         return jdbc.query("""
                         SELECT ec.id AS case_id, ec.question, ec.ground_truth_answer,

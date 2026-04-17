@@ -22,15 +22,15 @@ public class DocumentIngestOrchestrator {
     private final TaskExecutor taskExecutor;
 
     public String startConfiguredIngestAndIndex() {
-        return startAsync(documentIngestApi::ingestConfiguredPaths, "Started ingest from configured paths.");
+        return startAsync(() -> documentIngestApi.ingestConfiguredPaths(this::recordFileProgress), "Started ingest from configured paths.");
     }
 
     public String startPathIngestAndIndex(List<String> paths) {
-        return startAsync(() -> documentIngestApi.ingestPaths(paths), "Started ingest from selected path.");
+        return startAsync(() -> documentIngestApi.ingestPaths(paths, this::recordFileProgress), "Started ingest from selected path.");
     }
 
     public String startUploadedPathIngestAndIndex(List<String> paths, Runnable cleanup) {
-        return startAsync(() -> documentIngestApi.ingestPaths(paths), "Started ingest from uploaded files.", cleanup);
+        return startAsync(() -> documentIngestApi.ingestPaths(paths, this::recordFileProgress), "Started ingest from uploaded files.", cleanup);
     }
 
     private String startAsync(Supplier<IngestSummary> ingestCall, String startMessage) {
@@ -39,6 +39,10 @@ public class DocumentIngestOrchestrator {
     }
 
     private String startAsync(Supplier<IngestSummary> ingestCall, String startMessage, Runnable cleanup) {
+        IndexingProgressApi.ProgressSnapshot current = progressTracker.snapshot();
+        if (current.running()) {
+            return current.runId();
+        }
         String runId = IdGenerator.generateId();
         progressTracker.start(runId, startMessage);
         taskExecutor.execute(() -> runPipeline(ingestCall, cleanup));
@@ -75,5 +79,16 @@ public class DocumentIngestOrchestrator {
                 // Best effort cleanup.
             }
         }
+    }
+
+    private void recordFileProgress(com.berdachuk.docurag.documents.api.IngestProgressListener.IngestFileProgress event) {
+        progressTracker.markIngestFileProcessed(
+                event.path(),
+                event.name(),
+                event.documentsLoaded(),
+                event.documentsSkipped(),
+                event.status(),
+                event.message()
+        );
     }
 }

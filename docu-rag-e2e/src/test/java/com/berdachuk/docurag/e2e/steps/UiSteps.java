@@ -119,7 +119,7 @@ public class UiSteps {
     @When("I submit ingest configured paths on the documents page")
     public void submitIngestConfiguredPaths() throws Exception {
         Page page = currentPage();
-        String selectedPath = page.locator("#selectedIngestPathUpload").getAttribute("value");
+        String selectedPath = page.locator("#selectedIngestPathValue").getAttribute("value");
         E2eWorld.clients().documents().ingestDocuments(
                 new com.berdachuk.docurag.e2e.client.model.IngestPathsRequest()
                         .paths(java.util.Collections.singletonList(selectedPath)));

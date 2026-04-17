@@ -3,6 +3,8 @@ package com.berdachuk.docurag.documents.internal;
 import com.berdachuk.docurag.core.config.DocuRagProperties;
 import com.berdachuk.docurag.core.util.IdGenerator;
 import com.berdachuk.docurag.documents.api.DocumentIngestApi;
+import com.berdachuk.docurag.documents.api.IngestProgressListener;
+import com.berdachuk.docurag.documents.api.IngestProgressListener.IngestFileProgress;
 import com.berdachuk.docurag.documents.api.IngestSummary;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -36,6 +38,12 @@ public class DocumentIngestApiImpl implements DocumentIngestApi {
     @Override
     @Transactional
     public IngestSummary ingestConfiguredPaths() {
+        return ingestConfiguredPaths(IngestProgressListener.NOOP);
+    }
+
+    @Override
+    @Transactional
+    public IngestSummary ingestConfiguredPaths(IngestProgressListener progressListener) {
         List<String> paths = new ArrayList<>();
         String corpus = properties.getIngestion().getCorpusPath();
         String pdf = properties.getIngestion().getPdfDemoPath();
@@ -45,12 +53,19 @@ public class DocumentIngestApiImpl implements DocumentIngestApi {
         if (pdf != null && !pdf.isBlank()) {
             paths.add(pdf.trim());
         }
-        return ingestPaths(paths);
+        return ingestPaths(paths, progressListener);
     }
 
     @Override
     @Transactional
     public IngestSummary ingestPaths(List<String> paths) {
+        return ingestPaths(paths, IngestProgressListener.NOOP);
+    }
+
+    @Override
+    @Transactional
+    public IngestSummary ingestPaths(List<String> paths, IngestProgressListener progressListener) {
+        IngestProgressListener listener = progressListener == null ? IngestProgressListener.NOOP : progressListener;
         String jobId = IdGenerator.generateId();
         OffsetDateTime started = OffsetDateTime.now();
         jobs.insertStarted(jobId, started);
@@ -64,6 +79,7 @@ public class DocumentIngestApiImpl implements DocumentIngestApi {
                 Path p = Path.of(raw.trim()).toAbsolutePath().normalize();
                 if (!Files.exists(p)) {
                     log.warn("Ingest path does not exist: {}", p);
+                    publishFileProgress(listener, p, 0, 1, "SKIPPED", "Path does not exist.");
                     continue;
                 }
                 if (Files.isDirectory(p)) {
@@ -73,12 +89,14 @@ public class DocumentIngestApiImpl implements DocumentIngestApi {
                             int[] r = ingestPath(f);
                             loaded += r[0];
                             skipped += r[1];
+                            publishFileProgress(listener, f, r[0], r[1], statusFor(r), messageFor(r));
                         }
                     }
                 } else {
                     int[] r = ingestPath(p);
                     loaded += r[0];
                     skipped += r[1];
+                    publishFileProgress(listener, p, r[0], r[1], statusFor(r), messageFor(r));
                 }
             }
             jobs.finishSuccess(jobId, loaded, OffsetDateTime.now());
@@ -89,6 +107,39 @@ public class DocumentIngestApiImpl implements DocumentIngestApi {
             jobs.finishFailure(jobId, msg, OffsetDateTime.now());
             return new IngestSummary(jobId, loaded, skipped, "FAILED", msg);
         }
+    }
+
+    private void publishFileProgress(
+            IngestProgressListener listener,
+            Path path,
+            int loaded,
+            int skipped,
+            String status,
+            String message
+    ) {
+        listener.onFileProcessed(new IngestFileProgress(
+                path.toString(),
+                path.getFileName() == null ? path.toString() : path.getFileName().toString(),
+                loaded,
+                skipped,
+                status,
+                message,
+                OffsetDateTime.now()
+        ));
+    }
+
+    private String statusFor(int[] result) {
+        return result[0] > 0 ? "LOADED" : "SKIPPED";
+    }
+
+    private String messageFor(int[] result) {
+        if (result[0] > 0 && result[1] > 0) {
+            return "Loaded " + result[0] + ", skipped " + result[1] + ".";
+        }
+        if (result[0] > 0) {
+            return "Loaded " + result[0] + ".";
+        }
+        return "Skipped " + result[1] + ".";
     }
 
     /** @return int[]{loaded, skipped} */
