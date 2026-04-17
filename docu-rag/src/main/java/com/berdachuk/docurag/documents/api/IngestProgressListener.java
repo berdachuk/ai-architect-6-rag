@@ -15,6 +15,9 @@ public interface IngestProgressListener {
             String name,
             int documentsLoaded,
             int documentsSkipped,
+            Integer processedRecords,
+            Integer totalRecords,
+            Integer processedPercent,
             String status,
             String message,
             OffsetDateTime updatedAt

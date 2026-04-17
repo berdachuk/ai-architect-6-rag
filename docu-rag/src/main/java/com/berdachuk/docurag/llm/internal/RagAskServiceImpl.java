@@ -24,6 +24,11 @@ public class RagAskServiceImpl implements RagAskApi {
             If the context is insufficient, say you cannot answer from the indexed documents and suggest what is missing.
             Use clear, neutral language; this is not a substitute for professional medical advice.
             """;
+    private static final String DIRECT_SYSTEM = """
+            You are a careful medical information assistant. No indexed document context was retrieved.
+            Answer the user's question directly using clear, neutral language.
+            This is not a substitute for professional medical advice.
+            """;
 
     private final ChatClient chatClient;
     private final SemanticSearchApi semanticSearchApi;
@@ -39,8 +44,13 @@ public class RagAskServiceImpl implements RagAskApi {
                 .map(h -> "[%s] %s".formatted(h.title() == null ? h.documentId() : h.title(), h.snippet()))
                 .collect(Collectors.joining("\n\n"));
         if (context.isBlank()) {
+            String answer = chatClient.prompt()
+                    .system(DIRECT_SYSTEM)
+                    .user(request.question())
+                    .call()
+                    .content();
             return new RagAskResponse(
-                    "No relevant passages were retrieved from the index. Try rephrasing or rebuild the index.",
+                    answer == null ? "" : answer,
                     chatProperties.getModel(),
                     List.of()
             );

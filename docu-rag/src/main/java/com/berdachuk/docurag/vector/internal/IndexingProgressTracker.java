@@ -60,26 +60,65 @@ public class IndexingProgressTracker implements IndexingProgressApi {
             String name,
             int documentsLoaded,
             int documentsSkipped,
+            Integer processedRecords,
+            Integer totalRecords,
+            Integer processedPercent,
             String status,
             String message
     ) {
         if (!running) {
             return;
         }
-        this.ingestFiles.add(new IngestFileProgress(
+        int existingIndex = indexOfFileProgress(path);
+        IngestFileProgress existing = existingIndex >= 0 ? this.ingestFiles.get(existingIndex) : null;
+        Integer normalizedProcessedRecords = positiveOrNull(processedRecords);
+        Integer normalizedTotalRecords = positiveOrNull(totalRecords);
+        Integer normalizedProcessedPercent = boundedPercentOrNull(processedPercent);
+        IngestFileProgress progress = new IngestFileProgress(
                 path,
                 name,
                 Math.max(0, documentsLoaded),
                 Math.max(0, documentsSkipped),
+                normalizedProcessedRecords == null && existing != null ? existing.processedRecords() : normalizedProcessedRecords,
+                normalizedTotalRecords == null && existing != null ? existing.totalRecords() : normalizedTotalRecords,
+                normalizedProcessedPercent == null && existing != null ? existing.processedPercent() : normalizedProcessedPercent,
                 status,
                 message,
                 OffsetDateTime.now()
-        ));
+        );
+        if (existingIndex >= 0) {
+            this.ingestFiles.set(existingIndex, progress);
+        } else {
+            this.ingestFiles.add(progress);
+        }
         while (this.ingestFiles.size() > MAX_FILE_PROGRESS_EVENTS) {
             this.ingestFiles.removeFirst();
         }
         this.message = "Ingested files: " + this.ingestFiles.size() + ".";
         this.updatedAt = OffsetDateTime.now();
+    }
+
+    private Integer positiveOrNull(Integer value) {
+        if (value == null) {
+            return null;
+        }
+        return Math.max(0, value);
+    }
+
+    private Integer boundedPercentOrNull(Integer value) {
+        if (value == null) {
+            return null;
+        }
+        return Math.min(100, Math.max(0, value));
+    }
+
+    private int indexOfFileProgress(String path) {
+        for (int i = 0; i < this.ingestFiles.size(); i++) {
+            if (this.ingestFiles.get(i).path().equals(path)) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     public synchronized void markChunkingPhase() {

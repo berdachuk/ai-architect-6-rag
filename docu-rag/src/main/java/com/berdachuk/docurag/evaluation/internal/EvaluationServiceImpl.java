@@ -72,9 +72,11 @@ public class EvaluationServiceImpl implements EvaluationApi {
         try {
             int caseNumber = 0;
             for (EvaluationJdbcRepository.EvalCaseRow c : cases) {
+                ensureNotTerminated();
                 caseNumber++;
                 progressTracker.log("Case " + caseNumber + "/" + n + ": asking " + preview(c.question()));
                 RagAskResponse rag = ragAskApi.ask(new RagAskRequest(c.question(), topK, minScore));
+                ensureNotTerminated();
                 String pred = rag.answer() == null ? "" : rag.answer().trim();
                 String gt = c.groundTruth() == null ? "" : c.groundTruth().trim();
                 boolean exact = pred.equalsIgnoreCase(gt);
@@ -84,7 +86,9 @@ public class EvaluationServiceImpl implements EvaluationApi {
                 }
                 progressTracker.log("Case " + caseNumber + "/" + n + ": scoring answer.");
                 float[] ev = embeddingModel.embed(new Document(pred));
+                ensureNotTerminated();
                 float[] gv = embeddingModel.embed(new Document(gt));
+                ensureNotTerminated();
                 double cos = VectorMath.cosineSimilarity(ev, gv);
                 semSum += cos;
                 if (cos >= 0.80) {
@@ -104,10 +108,11 @@ public class EvaluationServiceImpl implements EvaluationApi {
                         norm,
                         cos,
                         pass,
-                        chunksJson
+                    chunksJson
                 );
                 progressTracker.log("Case " + caseNumber + "/" + n + ": semantic similarity=" + round4(cos) + ", pass=" + pass + ".");
             }
+            ensureNotTerminated();
             double normAcc = n == 0 ? 0 : (double) normHits / n;
             double meanSem = n == 0 ? 0 : semSum / n;
             double semAtThreshold = n == 0 ? 0 : (double) semPass / n;
@@ -125,6 +130,11 @@ public class EvaluationServiceImpl implements EvaluationApi {
                     round4(sem080)
             );
         } catch (RuntimeException ex) {
+            if (progressTracker.terminationRequested()) {
+                progressTracker.terminated(runId);
+                Thread.interrupted();
+                throw new IllegalStateException("Evaluation terminated by user.", ex);
+            }
             progressTracker.fail(runId, ex.getMessage() == null ? ex.getClass().getSimpleName() : ex.getMessage());
             throw ex;
         }
@@ -191,6 +201,11 @@ public class EvaluationServiceImpl implements EvaluationApi {
         return progressTracker.snapshot();
     }
 
+    @Override
+    public boolean terminateRunningEvaluation() {
+        return progressTracker.requestTermination();
+    }
+
     private List<EvaluationCaseResult> mapResults(String runId) {
         List<EvaluationCaseResult> out = new ArrayList<>();
         for (EvaluationJdbcRepository.ResultRow r : repository.findResultsForRun(runId)) {
@@ -230,5 +245,11 @@ public class EvaluationServiceImpl implements EvaluationApi {
         }
         String compact = text.replaceAll("\\s+", " ").trim();
         return compact.length() <= 120 ? compact : compact.substring(0, 117) + "...";
+    }
+
+    private void ensureNotTerminated() {
+        if (progressTracker.terminationRequested()) {
+            throw new IllegalStateException("Evaluation terminated by user.");
+        }
     }
 }

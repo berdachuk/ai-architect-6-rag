@@ -28,6 +28,9 @@
         .ingest-file-name { font-weight: 700; overflow-wrap: anywhere; }
         .ingest-file-status { font-size: .8rem; color: #172033; background: #dbeafe; border-radius: 6px; padding: .15rem .4rem; white-space: nowrap; }
         .ingest-file-path { overflow-wrap: anywhere; margin-top: .25rem; }
+        .ingest-file-progress { margin-top: .45rem; }
+        .ingest-file-progress .progress-track { height: 8px; }
+        .ingest-file-progress-meta { display: flex; justify-content: space-between; gap: .75rem; margin: .25rem 0 0; }
         .folder-picker { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #dbe3ed; }
         .folder-picker[hidden] { display: none; }
         .folder-picker-header { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
@@ -62,7 +65,7 @@
         <p class="muted">Auto-refresh: every 2 seconds.</p>
         <p class="muted" id="progressMessage">—</p>
         <div id="ingestFilesPanel" class="ingest-files" hidden>
-            <h3>Files processed in this run</h3>
+            <h3>Files in this run</h3>
             <p class="muted" id="ingestFilesSummary">Waiting for the first file.</p>
             <ul id="ingestFileList" class="ingest-file-list"></ul>
         </div>
@@ -169,6 +172,30 @@
             return Math.min(100, Math.max(0, Math.round((embedded * 100) / chunks)));
         }
 
+        function validPercent(value) {
+            const percent = Number(value);
+            if (!Number.isFinite(percent)) {
+                return null;
+            }
+            return Math.min(100, Math.max(0, Math.round(percent)));
+        }
+
+        function latestStructuredFile(progress) {
+            const files = progress && Array.isArray(progress.ingestFiles) ? progress.ingestFiles : [];
+            for (let i = files.length - 1; i >= 0; i--) {
+                if (validPercent(files[i].processedPercent) !== null) {
+                    return files[i];
+                }
+            }
+            return null;
+        }
+
+        function renderMainProgress(percent) {
+            const bounded = validPercent(percent) || 0;
+            document.getElementById('progressPercent').textContent = bounded + '%';
+            document.getElementById('progressFill').style.width = bounded + '%';
+        }
+
         function renderIngestFiles(progress) {
             const panel = document.getElementById('ingestFilesPanel');
             const summary = document.getElementById('ingestFilesSummary');
@@ -190,9 +217,12 @@
             const skipped = files.reduce(function (sum, file) {
                 return sum + Number(file.documentsSkipped || 0);
             }, 0);
+            const activeFile = latestStructuredFile(progress);
+            const activePercent = activeFile ? validPercent(activeFile.processedPercent) : null;
             summary.textContent = files.length === 0
                 ? 'Ingest started. Waiting for the first file.'
-                : files.length + ' file(s), loaded ' + loaded + ', skipped ' + skipped + '.';
+                : files.length + ' file(s), loaded ' + loaded + ' document(s), skipped ' + skipped + ' record(s).'
+                    + (activePercent === null ? '' : ' Current JSONL progress: ' + activePercent + '%.');
 
             list.innerHTML = '';
             files.slice().reverse().forEach(function (file) {
@@ -219,6 +249,33 @@
                 detail.textContent = (file.message || 'Processed.') + ' ' + (file.path || '');
                 item.appendChild(detail);
 
+                const filePercent = validPercent(file.processedPercent);
+                if (filePercent !== null) {
+                    const processedRecords = Number(file.processedRecords || 0);
+                    const totalRecords = Number(file.totalRecords || 0);
+                    const progressWrap = document.createElement('div');
+                    progressWrap.className = 'ingest-file-progress';
+
+                    const track = document.createElement('div');
+                    track.className = 'progress-track';
+
+                    const fill = document.createElement('div');
+                    fill.className = 'progress-fill';
+                    fill.style.width = filePercent + '%';
+
+                    const meta = document.createElement('p');
+                    meta.className = 'muted ingest-file-progress-meta';
+                    const countText = totalRecords > 0
+                        ? processedRecords + ' / ' + totalRecords + ' record(s)'
+                        : processedRecords + ' record(s)';
+                    meta.innerHTML = '<span>' + filePercent + '% processed</span><span>' + countText + '</span>';
+
+                    track.appendChild(fill);
+                    progressWrap.appendChild(track);
+                    progressWrap.appendChild(meta);
+                    item.appendChild(progressWrap);
+                }
+
                 list.appendChild(item);
             });
         }
@@ -237,9 +294,12 @@
                         document.getElementById('stopIngestForm').style.display = 'inline-block';
                         const embedded = Number(progress.embeddedChunks || 0);
                         const chunks = Number(progress.totalChunksToEmbed || 0);
-                        const percent = toPercent(embedded, chunks);
-                        document.getElementById('progressPercent').textContent = percent + '%';
-                        document.getElementById('progressFill').style.width = percent + '%';
+                        const activeFile = latestStructuredFile(progress);
+                        const ingestPercent = activeFile ? validPercent(activeFile.processedPercent) : null;
+                        const percent = progress.phase === 'INGESTING' && ingestPercent !== null
+                            ? ingestPercent
+                            : toPercent(embedded, chunks);
+                        renderMainProgress(percent);
                         document.getElementById('embeddedCount').textContent = String(embedded);
                         document.getElementById('chunkCount').textContent = String(chunks);
                         document.getElementById('ingestStatus').textContent = progress.phase || 'RUNNING';
@@ -261,8 +321,7 @@
                 const chunks = Number(status.chunkCount || 0);
                 const percent = toPercent(embedded, chunks);
 
-                document.getElementById('progressPercent').textContent = percent + '%';
-                document.getElementById('progressFill').style.width = percent + '%';
+                renderMainProgress(percent);
                 document.getElementById('embeddedCount').textContent = String(embedded);
                 document.getElementById('chunkCount').textContent = String(chunks);
                 document.getElementById('ingestStatus').textContent = (latestProgress && latestProgress.phase) || status.lastIngestStatus || '—';

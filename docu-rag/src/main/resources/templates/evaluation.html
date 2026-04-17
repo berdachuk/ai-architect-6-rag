@@ -11,6 +11,8 @@
         th, td { border: 1px solid #ddd; padding: 0.5rem 0.75rem; text-align: left; }
         th { background: #eef2f7; }
         button { background: #1e3a5f; color: #fff; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
+        button.danger { background: #b91c1c; }
+        button:disabled { opacity: 0.65; cursor: not-allowed; }
         .card { background: #fff; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
         input { padding: 0.35rem; margin-right: 0.5rem; }
         .success { color: #065f46; background: #ecfdf5; border: 1px solid #10b981; border-radius: 6px; padding: 0.6rem 0.8rem; }
@@ -64,6 +66,7 @@
     </div>
     <div class="card">
         <h2>Evaluation log</h2>
+        <button class="danger" type="button" id="terminate-evaluation-btn" style="display:none; margin-bottom: 0.75rem;">Terminate</button>
         <p class="muted" id="evaluation-log-status">Logs will appear here while evaluation is running.</p>
         <div class="log-panel" id="evaluation-log" aria-live="polite">
             <div class="log-line">No evaluation log entries yet.</div>
@@ -104,13 +107,20 @@
         var running = document.getElementById('evaluation-running');
         var logPanel = document.getElementById('evaluation-log');
         var logStatus = document.getElementById('evaluation-log-status');
+        var terminateButton = document.getElementById('terminate-evaluation-btn');
         var pollTimer = null;
 
         function renderLogs(snapshot) {
             if (!logPanel || !logStatus || !snapshot) return;
             var entries = snapshot.entries || [];
+            if (terminateButton) {
+                terminateButton.style.display = snapshot.running ? 'inline-block' : 'none';
+                terminateButton.disabled = !!snapshot.terminationRequested;
+                terminateButton.textContent = snapshot.terminationRequested ? 'Terminating...' : 'Terminate';
+            }
             logStatus.textContent = snapshot.running
-                ? 'Evaluation is running' + (snapshot.runId ? ': ' + snapshot.runId : '') + '.'
+                ? (snapshot.terminationRequested ? 'Terminating evaluation' : 'Evaluation is running')
+                    + (snapshot.runId ? ': ' + snapshot.runId : '') + '.'
                 : (entries.length ? 'Latest evaluation log.' : 'Logs will appear here while evaluation is running.');
             if (!entries.length) {
                 logPanel.innerHTML = '<div class="log-line">No evaluation log entries yet.</div>';
@@ -158,6 +168,30 @@
 
         if (!form || !button || !running) return;
         pollLogs();
+        if (terminateButton) {
+            terminateButton.addEventListener('click', function () {
+                terminateButton.disabled = true;
+                terminateButton.textContent = 'Terminating...';
+                fetch('/evaluation/terminate', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
+                    .then(function (response) {
+                        if (!response.ok) throw new Error('Terminate request failed');
+                        return response.json();
+                    })
+                    .then(renderLogs)
+                    .catch(function () {
+                        terminateButton.disabled = false;
+                        terminateButton.textContent = 'Terminate';
+                        if (logStatus) {
+                            logStatus.textContent = 'Could not terminate evaluation.';
+                        }
+                    });
+            });
+        }
         form.addEventListener('submit', function (event) {
             event.preventDefault();
             button.disabled = true;

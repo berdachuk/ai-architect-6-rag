@@ -87,6 +87,9 @@ public class DocumentIngestOrchestrator {
                 event.name(),
                 event.documentsLoaded(),
                 event.documentsSkipped(),
+                event.processedRecords(),
+                event.totalRecords(),
+                event.processedPercent(),
                 event.status(),
                 event.message()
         );

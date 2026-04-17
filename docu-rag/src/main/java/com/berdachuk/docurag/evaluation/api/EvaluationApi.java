@@ -16,4 +16,6 @@ public interface EvaluationApi {
     int clearRuns();
 
     EvaluationLogSnapshot logs();
+
+    boolean terminateRunningEvaluation();
 }

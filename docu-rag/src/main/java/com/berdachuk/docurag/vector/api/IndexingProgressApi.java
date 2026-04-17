@@ -16,6 +16,9 @@ public interface IndexingProgressApi {
             String name,
             int documentsLoaded,
             int documentsSkipped,
+            Integer processedRecords,
+            Integer totalRecords,
+            Integer processedPercent,
             String status,
             String message
     );
@@ -51,6 +54,9 @@ public interface IndexingProgressApi {
             String name,
             int documentsLoaded,
             int documentsSkipped,
+            Integer processedRecords,
+            Integer totalRecords,
+            Integer processedPercent,
             String status,
             String message,
             OffsetDateTime updatedAt

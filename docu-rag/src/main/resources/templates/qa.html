@@ -12,6 +12,8 @@
         input, textarea { max-width: 40rem; padding: 0.4rem; }
         textarea { width: 100%; min-height: 4rem; }
         pre { background: #f0f2f5; padding: 0.75rem; overflow: auto; font-size: 0.85rem; }
+        .muted { color: #4b5563; font-size: .9rem; }
+        .log-panel { background: #111827; color: #e5e7eb; padding: .75rem; border-radius: 6px; max-height: 320px; overflow: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .85rem; white-space: pre-wrap; }
     </style>
 </head>
 <body>
@@ -42,6 +44,37 @@
             </li>
         </ul>
     </div>
+    <div class="card">
+        <h2>QA log</h2>
+        <p class="muted">Requests and responses from this application session.</p>
+        <div id="qaLogPanel" class="log-panel">Waiting for QA requests.</div>
+    </div>
 </main>
+<script>
+    (function () {
+        async function refreshQaLogs() {
+            const panel = document.getElementById('qaLogPanel');
+            if (!panel) {
+                return;
+            }
+            try {
+                const response = await fetch('/qa/logs', {headers: {'Accept': 'application/json'}});
+                if (!response.ok) {
+                    return;
+                }
+                const payload = await response.json();
+                const entries = payload && Array.isArray(payload.entries) ? payload.entries : [];
+                panel.textContent = entries.length === 0
+                    ? 'Waiting for QA requests.'
+                    : entries.slice().reverse().join('\n\n');
+            } catch (e) {
+                // Keep the latest rendered log when polling temporarily fails.
+            }
+        }
+
+        refreshQaLogs();
+        setInterval(refreshQaLogs, 2000);
+    })();
+</script>
 </body>
 </html>

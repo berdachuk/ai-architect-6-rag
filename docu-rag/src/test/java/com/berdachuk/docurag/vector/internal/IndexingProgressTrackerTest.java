@@ -16,6 +16,9 @@ class IndexingProgressTrackerTest {
                 "a.jsonl",
                 3,
                 1,
+                750,
+                1000,
+                75,
                 "LOADED",
                 "Loaded 3, skipped 1."
         );
@@ -26,6 +29,9 @@ class IndexingProgressTrackerTest {
         assertThat(snapshot.ingestFiles().getFirst().name()).isEqualTo("a.jsonl");
         assertThat(snapshot.ingestFiles().getFirst().documentsLoaded()).isEqualTo(3);
         assertThat(snapshot.ingestFiles().getFirst().documentsSkipped()).isEqualTo(1);
+        assertThat(snapshot.ingestFiles().getFirst().processedRecords()).isEqualTo(750);
+        assertThat(snapshot.ingestFiles().getFirst().totalRecords()).isEqualTo(1000);
+        assertThat(snapshot.ingestFiles().getFirst().processedPercent()).isEqualTo(75);
         assertThat(snapshot.message()).isEqualTo("Ingested files: 1.");
     }
 }

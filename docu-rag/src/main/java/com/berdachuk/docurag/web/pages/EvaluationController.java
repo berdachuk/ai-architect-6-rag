@@ -62,6 +62,13 @@ public class EvaluationController {
         return evaluationApi.logs();
     }
 
+    @PostMapping("/evaluation/terminate")
+    @ResponseBody
+    public EvaluationLogSnapshot terminateEvaluation() {
+        evaluationApi.terminateRunningEvaluation();
+        return evaluationApi.logs();
+    }
+
     private void populateEvaluationPage(Model model) {
         model.addAttribute("runs", evaluationApi.listRuns());
         model.addAttribute("runResult", null);
