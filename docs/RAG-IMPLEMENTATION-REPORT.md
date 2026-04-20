@@ -216,11 +216,8 @@ Only text. PDF images / figures not extracted or embedded.
 ## 9. Verification
 
 ```bash
-# Reactor build (includes unit + integration tests)
-mvn -f docu-rag-parent/pom.xml clean verify
-
-# E2E (requires Docker)
-mvn -f docu-rag-parent/pom.xml verify -P e2e
+# Repository root — reactor build (unit + integration tests + E2E; Docker required for E2E)
+mvn clean verify
 ```
 
 CI pipeline: [`.github/workflows/docu-rag-verify.yml`](https://github.com/berdachuk/ai-architect-6-rag/blob/main/.github/workflows/docu-rag-verify.yml)

@@ -106,7 +106,7 @@ Generated interfaces/models are emitted under:
 **Reactor** (app + black-box E2E against Compose + JAR):
 
 ```bash
-cd docu-rag-parent
+# Repository root (reactor pom.xml)
 mvn clean verify
 ```
 
@@ -125,7 +125,7 @@ Windows:
 Manual equivalent (same profile the scripts activate):
 
 ```bash
-mvn -f docu-rag-parent/pom.xml clean verify -Pe2e-teardown-volumes
+mvn clean verify -Pe2e-teardown-volumes
 ```
 
 ### API-first workflow

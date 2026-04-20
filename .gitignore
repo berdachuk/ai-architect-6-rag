@@ -24,3 +24,5 @@ data/pdf-demo/manifest.json
 data/pdf-demo/*.pdf
 data/pdf-demo/**/*.pdf
 /.env
+/docu-rag/logs/
+/logs/

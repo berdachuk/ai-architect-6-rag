@@ -13,7 +13,6 @@ set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 COMPOSE_DIR="${REPO_ROOT}/docu-rag"
-PARENT_POM="${REPO_ROOT}/docu-rag-parent/pom.xml"
 E2E_TARGET="${REPO_ROOT}/docu-rag-e2e/target"
 E2E_CUCUMBER="${REPO_ROOT}/docu-rag-e2e/build/cucumber-reports"
 
@@ -86,10 +85,10 @@ if [[ "${TEARDOWN_VOLUMES}" == true ]]; then
   EXTRA_PROPS+=("-Pe2e-teardown-volumes")
 fi
 
-echo ">>> mvn clean verify -f ${PARENT_POM} ${EXTRA_PROPS[*]:-}"
+echo ">>> mvn clean verify (repo root) ${EXTRA_PROPS[*]:-}"
 set +e
 cd "${REPO_ROOT}"
-mvn -f "${PARENT_POM}" clean verify "${EXTRA_PROPS[@]}"
+mvn clean verify "${EXTRA_PROPS[@]}"
 MVN_EXIT=$?
 set -e
 

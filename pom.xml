@@ -12,7 +12,7 @@
     <description>Reactor: build docu-rag, then run docu-rag-e2e against Docker Compose + fat JAR</description>
 
     <modules>
-        <module>../docu-rag</module>
-        <module>../docu-rag-e2e</module>
+        <module>docu-rag</module>
+        <module>docu-rag-e2e</module>
     </modules>
 </project>

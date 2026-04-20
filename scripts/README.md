@@ -2,7 +2,7 @@
 
 | Script | Purpose |
 |--------|---------|
-| [`full-build-and-e2e.sh`](full-build-and-e2e.sh) | Unix/Git Bash: `mvn clean verify` on `docu-rag-parent`, optional `docker compose down -v` before/after, prints E2E report paths. With `--teardown-volumes`, activates Maven profile **`e2e-teardown-volumes`** on the E2E module (sets compose shutdown hook to `down -v`). |
+| [`full-build-and-e2e.sh`](full-build-and-e2e.sh) | Unix/Git Bash: `mvn clean verify` at repository root, optional `docker compose down -v` before/after, prints E2E report paths. With `--teardown-volumes`, activates Maven profile **`e2e-teardown-volumes`** on the E2E module (sets compose shutdown hook to `down -v`). |
 | [`full-build-and-e2e.ps1`](full-build-and-e2e.ps1) | Windows PowerShell: same as above. Use `-TeardownVolumes` for volume removal. |
 
 Examples:

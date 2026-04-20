@@ -20,7 +20,7 @@ Purpose: **black-box verification** of DocuRAG via **Cucumber** (API + CLI) and 
 
 ```bash
 # Recommended (reactor: builds jar then runs E2E)
-cd ../docu-rag-parent && mvn verify
+cd .. && mvn verify
 
 # Module only (requires jar already built)
 mvn verify

@@ -21,7 +21,7 @@ If the download is slow or blocked, set a proxy or retry; UI scenarios need Chro
 Build the app and run all E2E from the **reactor** (ensures the fat JAR exists):
 
 ```bash
-cd ../docu-rag-parent
+cd ..
 mvn verify
 ```
 
@@ -39,7 +39,7 @@ Windows (PowerShell):
 .\scripts\full-build-and-e2e.ps1 -TeardownVolumes
 ```
 
-This runs `docker compose down -v` before and after Maven, `mvn clean verify` on `docu-rag-parent`, prints Surefire/Cucumber report paths, and exits with Maven’s status code. With `--teardown-volumes` / `-TeardownVolumes`, the **`e2e-teardown-volumes`** Maven profile (defined in this module’s `pom.xml`) sets `e2e.compose.down.removeVolumes=true` so the test JVM’s shutdown hook also tears down Compose with **`-v`**.
+This runs `docker compose down -v` before and after Maven, `mvn clean verify` at the **repository root**, prints Surefire/Cucumber report paths, and exits with Maven’s status code. With `--teardown-volumes` / `-TeardownVolumes`, the **`e2e-teardown-volumes`** Maven profile (defined in this module’s `pom.xml`) sets `e2e.compose.down.removeVolumes=true` so the test JVM’s shutdown hook also tears down Compose with **`-v`**.
 
 **Success criteria:** Maven ends with `BUILD SUCCESS` and the script prints `STATUS: SUCCESS (mvn exit 0)`. Cucumber should report **17 scenarios** (all passed) and Surefire **18 tests** (Cucumber runner + `DocuRagClientFactoryTest`). Open `build/cucumber-reports/e2e-report.html` for the HTML report.
 

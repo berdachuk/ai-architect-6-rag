@@ -1,8 +1,8 @@
-# DocuRAG — Text Wireframes
+# DocuRAG — Text Wireframes (+ PlantUML Salt)
 
-Low-fidelity text wireframes for the Thymeleaf demo UI. These wireframes follow the documentation rule in [docs/AGENTS.md](AGENTS.md): product docs and screen-level requirements include text-based wireframes by default.
+Low-fidelity wireframes for the Thymeleaf demo UI. Each screen uses the project convention from the [wireframes skill](https://github.com/berdachuk/ai-architect-6-rag/blob/main/.claude/skills/wireframes/SKILL.md) (repo: `.claude/skills/wireframes/SKILL.md`): **structured text** (regions, controls, states) plus a short **PlantUML Salt** sketch (`@startsalt` … `@endsalt`) so layout regions stay aligned between prose and diagram.
 
-Aligned with [DocuRAG-PRD.md](DocuRAG-PRD.md), [DocuRAG-FORMS-AND-FLOWS.md](DocuRAG-FORMS-AND-FLOWS.md), and [DocuRAG-USE-CASES.md](DocuRAG-USE-CASES.md).
+Product docs rule: [AGENTS.md](AGENTS.md). Aligned with [DocuRAG-PRD.md](DocuRAG-PRD.md), [DocuRAG-FORMS-AND-FLOWS.md](DocuRAG-FORMS-AND-FLOWS.md), and [DocuRAG-USE-CASES.md](DocuRAG-USE-CASES.md).
 
 **Assumptions**
 
@@ -27,7 +27,7 @@ Aligned with [DocuRAG-PRD.md](DocuRAG-PRD.md), [DocuRAG-FORMS-AND-FLOWS.md](Docu
     - Page-specific heading
     - Page-specific panels, forms, tables, or visualizations
 
-- Safety and provenance
+- Footer / meta (safety / provenance / transparency)
     - Disclaimer: educational demo only; not medical advice
     - Dataset note: primary Hugging Face medical corpus
     - Optional model note: chat model and embedding model when configured
@@ -36,6 +36,23 @@ Aligned with [DocuRAG-PRD.md](DocuRAG-PRD.md), [DocuRAG-FORMS-AND-FLOWS.md](Docu
     - Current page remains reachable by direct URL refresh
     - Forms submit with HTTP POST and re-render the server page
     - Tables remain readable on narrow screens by horizontal scrolling
+
+```plantuml
+@startsalt
+{+
+  {* DocuRAG }
+  [Dashboard] [Q&A] [Documents] [Analysis] [Evaluation]
+  Env / profile (optional)
+  ==
+  {* Page-specific heading }
+  Main: panels | forms | tables | charts
+  ==
+  Disclaimer | HF corpus note | model note (optional)
+  ==
+  Deep links | POST + re-render | table horizontal scroll
+}
+@endsalt
+```
 
 ---
 
@@ -73,8 +90,24 @@ Aligned with [DocuRAG-PRD.md](DocuRAG-PRD.md), [DocuRAG-FORMS-AND-FLOWS.md](Docu
         - [Link] View analysis
         - [Link] Run evaluation
 
-- Footer
+- Footer / meta
     - Medical disclaimer
+
+```plantuml
+@startsalt
+{+
+  {* DocuRAG }
+  [Dashboard] [Q&A] [Documents] [Analysis] [Evaluation]
+  ==
+  {* Dashboard }
+  Index: docs | chunks | embedded | ingest | job id
+  Latest eval: empty OR run id + metrics + link
+  Quick actions: Q&A | Documents | Analysis | Evaluation
+  ==
+  Medical disclaimer
+}
+@endsalt
+```
 
 ---
 
@@ -104,8 +137,23 @@ Aligned with [DocuRAG-PRD.md](DocuRAG-PRD.md), [DocuRAG-FORMS-AND-FLOWS.md](Docu
     - Empty state
         - Text: Submit a question to see an answer and retrieved source chunks
 
-- Footer
+- Footer / meta
     - Medical disclaimer
+
+```plantuml
+@startsalt
+{+
+  {* DocuRAG }
+  [Dashboard] [Q&A] [Documents] [Analysis] [Evaluation]
+  ==
+  {* Question answering }
+  Question | Top-K | Min score | [Ask]
+  Empty: submit to see answer + sources
+  ==
+  Medical disclaimer
+}
+@endsalt
+```
 
 **Screen: Q&A result (`POST /qa`)**
 
@@ -137,8 +185,25 @@ Aligned with [DocuRAG-PRD.md](DocuRAG-PRD.md), [DocuRAG-FORMS-AND-FLOWS.md](Docu
         - Banner: [validation, retrieval, or LLM error]
         - Form remains editable
 
-- Footer
+- Footer / meta
     - Medical disclaimer
+
+```plantuml
+@startsalt
+{+
+  {* DocuRAG }
+  [Dashboard] [Q&A] [Documents] [Analysis] [Evaluation]
+  ==
+  {* Question answering }
+  Form: prefilled question | topK | min score | [Ask]
+  Answer block + optional model line
+  Sources table: score | category | title | snippet | doc id
+  Error banner (optional)
+  ==
+  Medical disclaimer
+}
+@endsalt
+```
 
 ---
 
@@ -186,8 +251,26 @@ Aligned with [DocuRAG-PRD.md](DocuRAG-PRD.md), [DocuRAG-FORMS-AND-FLOWS.md](Docu
         - [Link] Previous
         - [Link] Next
 
-- Footer
+- Footer / meta
     - Medical disclaimer
+
+```plantuml
+@startsalt
+{+
+  {* DocuRAG }
+  [Dashboard] [Q&A] [Documents] [Analysis] [Evaluation]
+  ==
+  {* Documents }
+  Progress: % | bar | embedded/total | job | poll 2s
+  Actions: total | folder pick | cleanup | start/stop ingest
+  Result message + optional job summary
+  Table: title | category | format | id
+  [Prev] [Next]
+  ==
+  Medical disclaimer
+}
+@endsalt
+```
 
 **Screen: Document detail (optional UI route)**
 
@@ -207,8 +290,24 @@ Aligned with [DocuRAG-PRD.md](DocuRAG-PRD.md), [DocuRAG-FORMS-AND-FLOWS.md](Docu
         - Scrollable text: [source document text]
     - [Link] Back to documents
 
-- Footer
+- Footer / meta
     - Medical disclaimer
+
+```plantuml
+@startsalt
+{+
+  {* DocuRAG }
+  [Dashboard] [Q&A] [Documents] [Analysis] [Evaluation]
+  ==
+  {* Document detail }
+  Metadata: title | category | format | ids
+  Scrollable body text
+  [Back to documents]
+  ==
+  Medical disclaimer
+}
+@endsalt
+```
 
 ---
 
@@ -241,13 +340,31 @@ Aligned with [DocuRAG-PRD.md](DocuRAG-PRD.md), [DocuRAG-FORMS-AND-FLOWS.md](Docu
         - Fallback list:
             - Item: [source node] --[relation]--> [target node]
 
-    - Data loading behavior
+    - Global behavior (data loading)
         - Browser loads `GET /api/visualizations/categories/pie`
         - Browser loads `GET /api/visualizations/entities/graph`
         - If either request fails, show an inline message in the relevant section
 
-- Footer
+- Footer / meta
     - Medical disclaimer
+
+```plantuml
+@startsalt
+{+
+  {* DocuRAG }
+  [Dashboard] [Q&A] [Documents] [Analysis] [Evaluation]
+  ==
+  {* Analysis }
+  [Clear old data] + status message
+  Pie chart + legend | empty state
+  Graph canvas | empty | edge list fallback
+  ==
+  GET pie + graph APIs | inline errors
+  ==
+  Medical disclaimer
+}
+@endsalt
+```
 
 ---
 
@@ -282,8 +399,23 @@ Aligned with [DocuRAG-PRD.md](DocuRAG-PRD.md), [DocuRAG-FORMS-AND-FLOWS.md](Docu
         - Empty state:
             - Text: No evaluation runs yet
 
-- Footer
+- Footer / meta
     - Medical disclaimer
+
+```plantuml
+@startsalt
+{+
+  {* DocuRAG }
+  [Dashboard] [Q&A] [Documents] [Analysis] [Evaluation]
+  ==
+  {* Evaluation }
+  Form: dataset | topK | min score | semantic threshold | [Run]
+  Previous runs table | empty
+  ==
+  Medical disclaimer
+}
+@endsalt
+```
 
 **Screen: Evaluation result (`POST /evaluation/run`)**
 
@@ -313,8 +445,25 @@ Aligned with [DocuRAG-PRD.md](DocuRAG-PRD.md), [DocuRAG-FORMS-AND-FLOWS.md](Docu
     - Error state
         - Banner: [dataset missing, validation, or evaluation failure]
 
-- Footer
+- Footer / meta
     - Medical disclaimer
+
+```plantuml
+@startsalt
+{+
+  {* DocuRAG }
+  [Dashboard] [Q&A] [Documents] [Analysis] [Evaluation]
+  ==
+  {* Evaluation }
+  Form prefilled | [Run evaluation]
+  Run result: id | cases | metrics row
+  Previous runs table + current row highlight
+  Error banner (optional)
+  ==
+  Medical disclaimer
+}
+@endsalt
+```
 
 ---
 
@@ -330,12 +479,28 @@ Aligned with [DocuRAG-PRD.md](DocuRAG-PRD.md), [DocuRAG-FORMS-AND-FLOWS.md](Docu
     - Message: [safe error message]
     - [Link] Back to dashboard
 
-- Footer
+- Footer / meta
     - Medical disclaimer
+
+```plantuml
+@startsalt
+{+
+  {* DocuRAG }
+  ==
+  {* Something went wrong }
+  Safe message
+  [Back to dashboard]
+  ==
+  Medical disclaimer
+}
+@endsalt
+```
 
 ---
 
 ## 8. Responsive Note
+
+Cross-cutting layout rules (no separate page shell). Salt wireframes above assume **desktop-first** bands; on narrow viewports:
 
 - Main content stacks vertically on narrow viewports.
 - Form controls take full row width on mobile.
@@ -356,4 +521,4 @@ Aligned with [DocuRAG-PRD.md](DocuRAG-PRD.md), [DocuRAG-FORMS-AND-FLOWS.md](Docu
 | Evaluation | `/evaluation` | F-05 | UC-15, UC-19 | FR-7 |
 | Error Page | error route if added | n/a | support scenario | NFR-5 |
 
-**Document version:** 2.0. Update when templates, OpenAPI, or the page inventory changes.
+**Document version:** 2.1 — PlantUML Salt companions added per wireframes skill; “Footer” sections renamed to **Footer / meta** for consistency with skill vocabulary. Update when templates, OpenAPI, or the page inventory changes.

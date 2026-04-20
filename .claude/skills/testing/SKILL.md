@@ -20,7 +20,7 @@ How to verify DocuRAG safely and deterministically: unit tests, Testcontainers i
   - Testcontainers Postgres+pgvector + Flyway migrations + Spring context wiring
   - Runs with **stub AI** beans under profile `test` (see `TestAIConfig`)
 - **Black-box E2E** (`docu-rag-e2e`)
-  - Recommended: `cd docu-rag-parent && mvn verify`
+  - Recommended: `mvn verify` from repository root (reactor `pom.xml`)
   - Uses OpenAPI-generated client + Playwright UI checks
 
 ### Non-negotiables

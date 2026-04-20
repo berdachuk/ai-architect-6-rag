@@ -123,7 +123,7 @@ public final class E2eInfraLifecycle {
 
         if (!Files.exists(jar)) {
             throw new IllegalStateException(
-                    "DocuRAG JAR not found: " + jar + ". Build the app first: mvn -f ../docu-rag-parent verify (or package docu-rag)");
+                    "DocuRAG JAR not found: " + jar + ". Build the app first: mvn verify from repository root (or package docu-rag)");
         }
 
         E2eWorld.setAppPort(port);

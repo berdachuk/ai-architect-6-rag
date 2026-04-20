@@ -13,7 +13,7 @@ Use this list with [DocuRAG-PRD.md](../DocuRAG-PRD.md) deliverables and [DocuRAG
 
 ## Technical verification (local or CI)
 
-- [ ] **Reactor build:** `mvn -f docu-rag-parent/pom.xml clean verify` (Docker required for Testcontainers + E2E Compose).
+- [ ] **Reactor build:** from repository root, `mvn clean verify` (Docker required for Testcontainers + E2E Compose).
 - [ ] **Optional full stack + volume teardown:** from repo root, `.\scripts\full-build-and-e2e.ps1 -TeardownVolumes` (Windows) or `./scripts/full-build-and-e2e.sh --teardown-volumes` (Unix).
 - [ ] **Reports after E2E:** `docu-rag-e2e/build/cucumber-reports/e2e-report.html`, `docu-rag-e2e/target/surefire-reports/`.
 
@@ -26,4 +26,4 @@ Use this list with [DocuRAG-PRD.md](../DocuRAG-PRD.md) deliverables and [DocuRAG
 
 ## CI
 
-- GitHub Actions workflow [`.github/workflows/docu-rag-verify.yml`](https://github.com/berdachuk/ai-architect-6-rag/blob/main/.github/workflows/docu-rag-verify.yml) runs the same `mvn -f docu-rag-parent/pom.xml verify` on pushes/PRs touching DocuRAG paths.
+- GitHub Actions workflow [`.github/workflows/docu-rag-verify.yml`](https://github.com/berdachuk/ai-architect-6-rag/blob/main/.github/workflows/docu-rag-verify.yml) runs the same `mvn verify` at the repository root on pushes/PRs touching DocuRAG paths.

@@ -213,7 +213,7 @@ flowchart LR
 
 ## 7. Definition of Done (release checklist)
 
-- [x] `mvn verify` green with Docker (Modulith + IT + mocks) — reactor: `mvn -f docu-rag-parent/pom.xml verify`; CI: [`.github/workflows/docu-rag-verify.yml`](https://github.com/berdachuk/ai-architect-6-rag/blob/main/.github/workflows/docu-rag-verify.yml).
+- [x] `mvn verify` green with Docker (Modulith + IT + mocks) — reactor at repository root; CI: [`.github/workflows/docu-rag-verify.yml`](https://github.com/berdachuk/ai-architect-6-rag/blob/main/.github/workflows/docu-rag-verify.yml).
 - [x] All **required** pages: `/`, `/qa`, `/analysis`, `/documents`, `/evaluation` (covered by app + `docu-rag-e2e` UI/API flows).
 - [x] **Disclaimer** on interactive pages (NFR-5).
 - [x] **Hugging Face** corpus link in README + subset manifest in repo ([`data/corpus/subset-manifest.example.json`](https://github.com/berdachuk/ai-architect-6-rag/blob/main/data/corpus/subset-manifest.example.json)); **supplementary PDF demo** described ([`data/pdf-demo/README.md`](https://github.com/berdachuk/ai-architect-6-rag/blob/main/data/pdf-demo/README.md) and [DocuRAG-Datasets.md](DocuRAG-Datasets.md); primary vs PDF wording in README).

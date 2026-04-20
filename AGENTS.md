@@ -13,7 +13,7 @@ Repo purpose: **DocuRAG** is a medical-document Retrieval Augmented Generation (
 ├── .run/                           # IntelliJ run/debug configs
 ├── docu-rag/                       # Spring Boot app (Modulith modules live under com.berdachuk.docurag.*)
 ├── docu-rag-e2e/                   # Cucumber + Playwright black-box E2E (OpenAPI client)
-├── docu-rag-parent/                # Maven reactor: docu-rag + docu-rag-e2e
+├── pom.xml                         # Maven reactor: docu-rag + docu-rag-e2e
 ├── docs/                           # PRD, architecture, dev guide (MkDocs source)
 └── scripts/                        # full-build-and-e2e helpers
 ```
@@ -34,7 +34,7 @@ Conceptual flow: **documents → chunking → vector → retrieval → llm**, wi
 cd docu-rag && mvn verify
 
 # E2E (reactor builds app JAR then runs Cucumber/Playwright)
-cd docu-rag-parent && mvn verify
+mvn verify   # from repository root (reactor pom.xml)
 
 # One-shot full build + E2E (+ optional docker down -v)
 ./scripts/full-build-and-e2e.sh --teardown-volumes
@@ -63,6 +63,7 @@ Skills live only under `.claude/skills/**/SKILL.md`. Load the smallest skill(s) 
 | `api-design` | REST + Thymeleaf wiring, DTOs, OpenAPI alignment |
 | `ai-provider` | Spring AI custom endpoints, profiles, TestAIConfig behavior |
 | `testing` | unit/IT/E2E strategy, fixtures, Testcontainers, Playwright |
+| `wireframes` | UI layout in docs/specs: structured text wireframes + PlantUML `@startsalt` (pages, nav, forms, flows) |
 
 ## Module Guidance
 

@@ -87,7 +87,7 @@ To skip tests: `mvn -q package -DskipTests` (not recommended for CI).
 End-to-end tests live in [`../docu-rag-e2e`](../docu-rag-e2e). Run them **after** packaging this module from the parent reactor:
 
 ```text
-cd ../docu-rag-parent
+cd ..
 mvn verify
 ```
 

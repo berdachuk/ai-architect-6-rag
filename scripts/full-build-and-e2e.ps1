@@ -11,7 +11,6 @@ $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoRoot = Resolve-Path (Join-Path $ScriptDir "..")
 $ComposeDir = Join-Path $RepoRoot "docu-rag"
-$ParentPom = Join-Path $RepoRoot "docu-rag-parent\pom.xml"
 $E2eTarget = Join-Path $RepoRoot "docu-rag-e2e\target"
 $E2eCucumber = Join-Path $RepoRoot "docu-rag-e2e\build\cucumber-reports"
 
@@ -71,7 +70,7 @@ if ($TeardownVolumes) {
     Invoke-ComposeDownV
 }
 
-$mvnArgs = @("-f", $ParentPom, "clean", "verify")
+$mvnArgs = @("clean", "verify")
 if ($TeardownVolumes) {
     $mvnArgs += "-Pe2e-teardown-volumes"
 }

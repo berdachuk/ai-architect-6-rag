@@ -39,7 +39,7 @@ Supporting modules:
 
 - [`docu-rag/`](docu-rag/) - main Spring Boot application
 - [`docu-rag-e2e/`](docu-rag-e2e/) - Cucumber + Playwright end-to-end tests
-- [`docu-rag-parent/`](docu-rag-parent/) - Maven reactor for app + E2E
+- [`pom.xml`](pom.xml) - Maven reactor for app + E2E (repository root)
 - [`docs/`](docs/) - product, architecture, delivery, and submission documents
 
 ## Acceptance criteria mapping
@@ -90,9 +90,10 @@ This runs unit and integration tests with **Testcontainers** and mocked AI beans
 Build the full reactor with end-to-end tests:
 
 ```bash
-cd docu-rag-parent
 mvn verify
 ```
+
+Run this from the **repository root** (where the reactor `pom.xml` lives).
 
 From the repository root, you can also run the helper scripts:
 
@@ -125,9 +126,10 @@ mvn verify
 Black-box E2E verification:
 
 ```bash
-cd docu-rag-parent
 mvn verify
 ```
+
+From the **repository root**.
 
 E2E notes:
 
@@ -179,9 +181,9 @@ For local AI-backed execution, configure environment variables such as:
 ├── mkdocs.yml
 ├── requirements-docs.txt
 ├── docs/
+├── pom.xml
 ├── docu-rag/
 ├── docu-rag-e2e/
-├── docu-rag-parent/
 └── scripts/
 ```
 
